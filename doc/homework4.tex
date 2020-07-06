@@ -1,0 +1,138 @@
+\documentclass[11pt]{article}
+%\input epsf
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+%\usepackage{multicol}
+\input{/Users/colella/Desktop/anag-repo/ChomboDoc/trunk/Common/preamble.tex}
+\input{/Users/colella/Desktop/anag-repo/ChomboDoc/trunk/Common/macros.tex}
+\oddsidemargin=-.125in
+\evensidemargin=-.125in
+\textwidth=6.5in
+\topmargin=-.5in
+\textheight=8.5in
+\parskip 3pt
+\nonfrenchspacing
+\title{CS294  - Homework Assignment 4 \\ Particle-in-Cell Vortex Method \\
+Due date: 11:59 PM, November 1, 2017}
+\begin{document}
+\maketitle
+
+\noindent
+
+You will be implementing parts of a particle-in-cell (PIC) method for vorticity dynamics in 2D. This is primarily an exercise in more elaborate template programming, with a little sorting thrown in. Generally speaking, you are integrating an  ODE of the form
+\begin{equation}
+\frac{dX}{dt} = F(t, X)
+\end{equation}
+In this problem set our forcing functions will all be independent of time, so you can ignore the {\tt a\_time} argument, but the {\tt RK4} template class implements the more general form, so you need to implement your code to conform to the interface.
+We will be using the 4th-order explicit Runge-Kutta integration technique to evolved this system of ODEs. In this case $X$ is the class {\tt ParticleSet}. 
+To see what the RK4 interface is doing, we re-write the Runge-Kutta algorithm as follows.
+\begin{align*}
+k_1 = & {\Delta t} F(t^n,X^n) \\
+k_2 = & {\Delta t} F(t^n + \half \Delta t, X^n + \frac{1}{2} k_1) \\
+k_3 = & {\Delta t} F(t^n + \half \Delta t, X^n + \frac{1}{2} k_2) \\
+k_4 = & {\Delta t} F(t^n + \Delta t, X^n + k_3) 
+\end{align*}
+\begin{align*}
+X^{n+1} = X^{n} + \frac{1}{6} (k_1 + 2k_2 + 2k_3 + k_4)
+\end{align*}
+In pseudocode, this is given by
+\begin{verbatim}
+K := 0; delta := 0;
+K:= dt*F(t,X+K); delta+=K; K*= 1/2;
+K:= dt*F(t+dt/2,X+K); delta+=2*K; K*= 1/2;
+K:= dt*F(t+dt/2,X+K); delta+=2*K;
+K:= dt*F(t+dt,X+K); delta += K;
+\end{verbatim}
+
+Thus the stages of RK4 all require the calculations of the form
+\begin{equation}
+k := \Delta t F(t, X+k)
+\end{equation}
+where the $k$ appearing on the right-hand side is scaled by $\half$ or $1$ as appropriate prior to performing the calculation. 
+
+The {\tt F} template class implements an operator that evaluates everything on the right of the equal sign, given the inputs {\tt a\_dX, a\_time, a\_dt, a\_X}. It first computes a temporary {\tt a\_X + a\_k}, then evaluates the right-hand side and stores in in {\tt a\_k} and scales the result by {\tt a\_dt}. 
+
+In the particular case of our particle method, the {\tt F} template class contains no data, and the single member function
+\begin{verbatim}
+  void ParticleVelocities::operator()(ParticleShift& a_k, 
+                                      const double& a_time, 
+                                      const double& a_dt,
+                                      ParticleSet& a_X)
+\end{verbatim}
+
+The input is the current estimate for the increment in the state {\tt a\_k}; and on return it contains the output new estimate for $k$; the time to evaluate the function (ignored in this case); the timestep to take $\Delta t$, the state at the start of the timestep {\tt a\_X}. 
+
+\section*{ Specific Instructions }
+You are to implement
+the {\tt ParticleSet, ParticleShift} classes conforming to the declarations in {\tt ParticleSet.H}. You will also implement in {\tt ParticleVelocities.cpp} the single member function {\tt ParticleVelocities::operator()(ParticleShift\& a\_k, const double\& a\_time, const double\& dt, ParticleSet\& a\_state) }: computes the $k's$ induced on a set of particles by all of the particles in the input {\tt ParticleSet} displaced by the input $k$.
+The {\tt main} in {\tt VortexMethod2D.cpp} implements the following four tests, all defined on the unit square. 
+\begin{enumerate}
+\item ({\tt test = 1})
+A single particle, with strength $1./h^2$, placed at (.49,.24). The number of grid points is given by $M=6 , 2^M = N = 64$; run to time $t=10$.
+The displacement of the particle should be roundoff, since the velocity induced by a single particle on itself should vanish. 
+\item ({\tt test = 2})
+Two particles: one with strength $1/h^2$ located at (.5,.5), the other with strength 0, located at (.5,.25). The number of grid points is given by $M = 6, 2^M = N = 64$. Run to time $t=10$ . The strength 1 particle should not move, while the zero-strength particle should move at constant angular velocity on a circle centered at (.5,.5) of radius .25. 
+\item ({\tt test = 3})
+Two particles: located at (.5,.25) and (.5,.75) both with strength $1/h^2$. The number of grid points is given by $M = 6, 2^M = N = 64$. Run to time $t=10$. Both particles should move at a constant angular velocity on a circle centered at (.5,.5) of radius .25. 
+\item ({\tt test =} something other than 1, 2, or 3)
+Two-patch problem. For each point 
+$ \boldsymbol{i}\in [0 \dots N_p]$, $N_p = 256$, we place a particle at the point $\boldsymbol{i} h_p$, $h_p = \frac{1}{N_p}$ provided that 
+\begin{gather*}
+|| \boldsymbol{i}h_p - (.5,.375) || \leq .12 \hbox { or } || \boldsymbol{i} h_p - (.5,.625) || \leq .12.
+\end{gather*}
+The strength of each of the particles should be $h_p^2/h^2$. This corresponds to a pair of patches of vorticity of constant strength. The grid $M=7, 2^M = N = 128$, particle refinement factor = 2 (i.e. 4 particles / grid point). Integrate the solution to time T = 12.5. 
+
+
+\end{enumerate}
+In the first three cases, the first particle in the exact solution has a fixed radial location relative to the center of the square, (0.,.25,.25, respectively) and we output the computed radius to compare. For the final calculation, we output plot files for the particles and the vorticity on the mesh. They should look similar to the results in Lecture 17. By setting {\tt ANIMATION = TRUE} in your makefile, you can produce a pair of plotfiles every time step (particle locations, vorticity field on the grid). The default is to produce a pair of plotfiles at the end of the calculation, and only for the two-patch case.
+
+\section*{Description of Algorithm for Computing the Velocity Field}
+\begin{enumerate}
+\item Depositing the charges in the particles on the grid.
+\begin{gather*}
+\omega^g_\ibold = \sum \limits_k \omega^k \Psi(\ibold h - \xbold^k)
+\end{gather*}
+where the $\xbold^k$'s are the positions of the particles in {\tt a\_state} displaced by the input {\tt a\_k}.
+This is givn as follows. Initialize
+\begin{gather*}
+\omega^g \equiv 0.
+\end{gather*}
+Then, for each particle,
+\begin{gather*}
+\ibold^k =  \Big \lfloor \frac{\xbold^k}{h} \Big \rfloor , \\
+\sbold^k = \frac{\xbold^k - \ibold^k h}{h} ,
+\end{gather*}
+\begin{align*}
+\omega^g_{\ibold^k} += & \omega^k (1 - s^k_0)(1-s^k_1) ,\\
+\omega^g_{\ibold^k + (1,0)} += & \omega^k s^k_0 (1 - s^k_1) ,\\
+\omega^g_{\ibold^k + (0,1)} += & \omega^k (1 - s^k_0) s^k_1 ,\\
+\omega^g_{\ibold^k + (1,1)} += & \omega^k s^k_0 s^k_1 .
+\end{align*}
+\item Convolution with the Green's function to obtain the potential on the grid, using Hockney's algorithm. The Hockney class should be constructed and maintained in {\tt ParticleSet} - all you have to do is call the member function {\tt Hockney::convolve} at the appropriate time to compute
+\begin{gather*}
+\psi_\ibold = \sum \limits_{\jbold \in \mathbb{Z}^2} G(\ibold - \jbold) \omega^g_\jbold .
+\end{gather*}
+\item Compute the fields on the grid using finite differences.
+\begin{gather*}
+\vec{U}^g_\ibold = \Big (\frac{\psi_{\ibold + (0,1)} - \psi_{\ibold - (0,1)}}{2 h} , -\frac{\psi_{\ibold + (1,0)} - \psi_{\ibold - (1,0)}}{2 h} \Big ).
+\end{gather*}
+\item Interpolate the fields from the grid to the particles.  
+\begin{gather*}
+\vec{U}^k = \sum \limits_{\ibold \in \mathbb{Z}^2} \vec{U}_\ibold \Psi(\xbold^k - \ibold h),
+\end{gather*}
+\begin{gather*}
+\ibold^k = \Big \lfloor \frac{\xbold^k}{h} \Big \rfloor ,\\
+\sbold^k =\frac{\xbold^k - \ibold^k h}{h},
+\end{gather*}
+\begin{align*}
+\vec{U}^k = & \vec{U}^g_\ibold (1 - s^k_0)(1-s^k_1) ,\\
++ & \vec{U}^g_{\ibold + (1,0)} s^k_0 (1 - s^k_1) ,\\
++ & \vec{U}^g_{\ibold + (0,1)}(1 - s^k_0) s^k_1 ,\\
++ & \vec{U}^g_{\ibold + (1,1)} s^k_0 s^k_1 .
+\end{align*}
+\end{enumerate}
+Note that the operator{\tt ParticleVelocities::operator()} requires you to return in {\tt a\_k} the quantities $\{\Delta t \vec{U}^k\} _{k = 1, \dots , N_p}$.
+
+\end{document}
+
