@@ -85,7 +85,7 @@ inline void WriteData(BoxData<double,n> &    a_state,
   double origin[DIM];
   for (int ii = 0; ii < DIM; ii++)
   {
-    origin[ii] = 0.0;
+    origin[ii] = 0.;
   }
 
   char basename[1024];

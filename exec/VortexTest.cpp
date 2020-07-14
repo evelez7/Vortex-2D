@@ -2,6 +2,7 @@
 #include <cassert>
 #include <cmath>
 #include <vector>
+#include <string>
 #include "Proto_Point.H"
 #include "Proto_Box.H"
 #include "Proto_BoxData.H"
@@ -12,6 +13,7 @@
 //#include "VisitWriter.H"
 #include "ParticleWriter.H"
 #include "Proto_RK4.H"
+using namespace std;
 void outField(ParticleSet& a_state)
 {
   BoxData<double> field(a_state.m_box);
@@ -48,7 +50,7 @@ void outField(ParticleSet& a_state)
   WriteBoxData("field",field);
 
 }
-void outVort(ParticleSet& p, int a_coarsenFactor)
+void outVort(ParticleSet& p, int a_coarsenFactor,unsigned int a_nstep)
 {
   int coarsenFactor = a_coarsenFactor;
   Box bx = p.m_box.coarsen(coarsenFactor);
@@ -59,13 +61,14 @@ void outVort(ParticleSet& p, int a_coarsenFactor)
   double weight;
   Point e0 = Point::Basis(0);
   Point e1 = Point::Basis(1);
-  
+  //
   outVort.setVal(0.);
   for (int k = 0; k < p.m_particles.size(); k++)
     {
       for (int l = 0; l < DIM; l++)
         {
-          double newpos = p.m_particles[k].m_x[l]; 
+          double newpos = p.m_particles[k].m_x[l];
+          newpos -= .5*h;
           ipos[l] = newpos/h;
           xpos[l] = (newpos - ipos[l]*h)/h;
         }
@@ -81,7 +84,8 @@ void outVort(ParticleSet& p, int a_coarsenFactor)
             }
         }
     }
-  const char* foo = WriteBoxData(outVort);
+  string filename = string("vorticity") ;
+  WriteData(outVort,   a_nstep, h, filename,filename);
 };
 int main(int argc, char* argv[])
 {
@@ -89,9 +93,7 @@ int main(int argc, char* argv[])
   unsigned int N;
   cout << "input log_2(number of grid points)" << endl; 
   cin >> M;
-  cout << "input test = 1,2, other" << endl;
-  int test;
-  cin >> test;
+  int test = 4;
   cout << "input particle refinement factor" << endl;
   unsigned int cfactor;
   cin >> cfactor;
@@ -188,7 +190,7 @@ else if (test == 3)
   
   RK4<ParticleSet,ParticleVelocities,ParticleShift> integrator;
 #if ANIMATION
-  outVort(p,pcfactor);
+  outVort(p,pcfactor,0);
   PWrite(&p);
 #endif 
   for(int i=0; i<m; i++)
@@ -196,7 +198,7 @@ else if (test == 3)
       integrator.advance(time, dt, p);
       time = time + dt;
 #if ANIMATION
-      outVort(p,pcfactor);
+      outVort(p,pcfactor,i);
       PWrite(&p);
 #endif
       if (time >= timeStop) 
