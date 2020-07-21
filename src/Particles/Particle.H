@@ -36,6 +36,7 @@ class Particle
 public:
   array<double, DIM> m_x;
   double strength;
+  array<double, DIM> m_alpha;
   inline void increment(const DX& a_shift)
   {
     for(unsigned int i=0; i<DIM; i++) 

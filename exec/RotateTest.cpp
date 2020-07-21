@@ -14,6 +14,67 @@
 #include "ParticleWriter.H"
 #include "Proto_RK4.H"
 using namespace std;
+typedef array<array<double,DIM> , DIM> matrix;
+typedef array<double,DIM> vec;
+matrix transpose(const matrix& a_m)
+{
+  matrix retval;
+  for (int i = 0; i < DIM; i++)
+    {
+      for (int j = 0; j < DIM; j++)
+        {
+          retval[i][j] = a_m[j][i];
+        }
+    }
+  return retval; 
+}
+vec prod(const matrix& a_m,const vec& a_v)
+{
+  vec retval;
+  for (int i = 0; i < DIM; i++)
+    {
+      retval[i] = 0;
+      for (int j = 0; j < DIM; j++)
+        {
+          retval[i] += a_v[j]*a_m[i][j];
+        }
+    }
+  return retval;
+}
+matrix prod(const matrix& a_m1,const matrix& a_m2)
+{
+  matrix retval;
+  for (int i = 0; i < DIM; i++)
+    {
+      for (int j = 0; j < DIM; j++)
+        {
+          retval[i][j] = 0;
+          for (int k = 0; k < DIM; k++)
+            {
+              retval[i][j] += a_m1[i][k]*a_m2[k][j];
+            }
+        }
+    }
+  return retval;
+}
+matrix rotMat(const double& t)
+{
+  matrix retval;
+  retval[0][0] = cos(M_PI*t);
+  retval[1][1] = cos(M_PI*t);
+  retval[0][1] = -sin(M_PI*t);
+  retval[1][0] = sin(M_PI*t);
+  return retval;
+}
+matrix strainMat(const double& t)
+{
+  matrix retval;
+  retval[0][0] = 1/t;
+  retval[1][1] = t;
+  retval[0][1] = 0;
+  retval[1][0] = 0;
+  return retval;
+}
 void outField(ParticleSet& a_state)
 {
   BoxData<double> field(a_state.m_box);
@@ -50,7 +111,7 @@ void outField(ParticleSet& a_state)
   WriteBoxData("field",field);
 
 }
-void outVort(ParticleSet& p, int a_coarsenFactor,unsigned int a_nstep)
+void outVort(ParticleSet& p, int a_coarsenFactor,double a_angle)
 {
   int coarsenFactor = a_coarsenFactor;
   Box bx = p.m_box.coarsen(coarsenFactor);
@@ -84,8 +145,8 @@ void outVort(ParticleSet& p, int a_coarsenFactor,unsigned int a_nstep)
             }
         }
     }
-  string filename = string("vorticity") ;
-  WriteData(outVort,   a_nstep, h, filename,filename);
+  string filename = string("rotate") + to_string(a_angle);
+  WriteData(outVort, 0, h, filename,filename);
 };
 int main(int argc, char* argv[])
 {
@@ -97,13 +158,12 @@ int main(int argc, char* argv[])
   cout << "input particle refinement factor" << endl;
   unsigned int cfactor;
   cin >> cfactor;
-  cout << "enter stopping time" << endl;
-  double timeStop;
-  cin >> timeStop;
+  cout << "enter angle, alpha" << endl;
+  double angle,alpha;
+  cin >> angle;
+  cin >> alpha;
   ParticleSet p;
   N = Power(2,M);
-  PR_TIMER_SETFILE(to_string(N) + "proto.time.table");
-  PR_TIMERS("main");
   double h = 1./N;
   double hp = h/cfactor; //pow(h,4./3.);
   int Np = 1./hp;
@@ -152,26 +212,28 @@ else if (test == 3)
     }
   else
     {
-      array<double,DIM> xp;
-      for (int i = 0;i < Np;i++)
+      vec xp;
+      matrix rot,sym,mat;
+      rot = rotMat(angle);
+      sym = strainMat(alpha);
+      mat = prod(rot,prod(prod(rot,sym),transpose(rot)));
+      for (int i = 1;i < Np/4;i++)
         {
-          xp[0] = i*hp;
-          for (int j = 0; j< Np; j++)
+          xp[0] = i*hp;// + sqrt(3)*hp/2;
+          for (int j = 1; j< Np/4; j++)
             {
-              xp[1] = j*hp;
-              double dist1 = sqrt(pow(xp[0] - .375,2) + pow(xp[1] - .5,2));
-              double dist2 = sqrt(pow(xp[0] - .625,2) + pow(xp[1] - .5,2));
-              if ((dist1 < .12 ) | (dist2 < .12))
-            // if (dist1 < .1125 )
-                {
-                  Particle part;
-                  part.m_x[0] = xp[0];
-                  part.m_x[1] = xp[1];
-                  part.strength = hp*hp/h/h;
-                  part.m_alpha[0] = xp[0];
-                  part.m_alpha[1] = xp[1];
-                  p.m_particles.push_back(part);
-                }
+              xp[1] = j*hp;// + sqrt(2)*hp/2;
+              vec dist;
+              dist[0] = xp[0] - .125;
+              dist[1] = xp[1] - .125;
+              Particle part;
+              part.m_x = prod(mat,dist);
+              part.m_x[0] += .5;
+              part.m_x[1] += .5;
+              //part.m_x[0] = mat[0][0]*dist0 + mat[0][1]*dist1 + .5;
+              //part.m_x[1] = mat[1][0]*dist0 + mat[1][1]*dist1 + .5;
+              part.strength = hp*hp/h/h;
+              p.m_particles.push_back(part);
             }
         }
     }
@@ -187,37 +249,5 @@ else if (test == 3)
   kIn.init(p);
   kOut.init(p);
   kIn.setToZero();
-  ParticleVelocities pv; 
-  double time = 0.;
-  double dt = 140*.025/N;
-  int m = 5000;
-  
-  RK4<ParticleSet,ParticleVelocities,ParticleShift> integrator;
-#if ANIMATION
-  outVort(p,pcfactor,0);
-  PWrite(&p);
-#endif 
-  for(int i=0; i<m; i++)
-    {
-      integrator.advance(time, dt, p);
-      time = time + dt;
-#if ANIMATION
-      outVort(p,pcfactor,i);
-      PWrite(&p);
-#endif
-      if (time >= timeStop) 
-        {
-          break;
-        }
-    }
-  if (((test == 1) || (test == 2) || (test == 3)))
-    {
-      Particle part0 = p.m_particles[0];
-      double radius = sqrt(pow(part0.m_x[0] - .5,2) + pow(part0.m_x[1] - .5,2));
-      cout << "test = "<<test << ": radial position of first particle = " <<
-        radius << endl;
-      cout << "Cartesian position of first particle = " << part0.m_x[0] << " , " << part0.m_x[1] << endl; 
-    }
-  outField(p);
-  PR_TIMER_REPORT();
+  outVort(p,pcfactor,angle);
 }

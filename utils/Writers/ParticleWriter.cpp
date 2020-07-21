@@ -29,11 +29,18 @@ void PWrite(const char* a_filename, const ParticleSet* a_p)
     {
       return;
     }
+  vector<vector<double> > vars(3);
   unsigned int size = a_p->m_particles.size();
   std::vector<double> x(3*size);
+  vars[0] = std::vector<double>(size);
+  vars[1] = std::vector<double>(size);
+  vars[2] = std::vector<double>(size);
   for(unsigned int i=0; i<size; i++)
     {
       const Particle& p = a_p->m_particles[i];
+      vars[0][i] = p.strength;
+      vars[1][i] = p.m_alpha[0];
+      vars[2][i] = p.m_alpha[1];
       x[i*3] = p.m_x[0];
       x[i*3+1] = p.m_x[1];
 #if DIM==3
@@ -42,10 +49,16 @@ void PWrite(const char* a_filename, const ParticleSet* a_p)
       x[i*3+2] = 0.0;
 #endif
     }
- 
+  double* varPtr[3];
+  varPtr[0] = &vars[0][0];
+  varPtr[1] = &vars[1][0];
+  varPtr[2] = &vars[2][0];
+  int vardim[3] = {1,1,1};
+  const char* const varnames[] = {"strength","alpha1","alpha2"}; 
+
   write_point_mesh(a_filename, size,
-		   &(x[0]), 0, 0,
-                   0, 0);
+		   &(x[0]), 3, vardim,
+                   varnames, varPtr);
 }
 inline void write_point_mesh(const char* filename, int npts, double *pts,
                       int nvars, int *vardim, const char * const *varnames,
