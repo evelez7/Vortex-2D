@@ -16,6 +16,7 @@ public:
       }
   } 
   array<double, DIM> m_x;
+  array<array<double, DIM >, DIM > m_gradx;
   inline void increment(double a_scale, const DX& a_rhs)
   {
     for(unsigned int i=0; i<DIM; i++) 
@@ -37,6 +38,7 @@ public:
   array<double, DIM> m_x;
   double strength;
   array<double, DIM> m_alpha;
+  array<array<double, DIM>, DIM> m_gradx;
   inline void increment(const DX& a_shift)
   {
     for(unsigned int i=0; i<DIM; i++) 
