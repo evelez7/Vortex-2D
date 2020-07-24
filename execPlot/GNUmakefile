@@ -1,9 +1,9 @@
 
 #our makefile variables.   Good to place commonly changed variables
 # at the top of your makefile. Then follow with your rules.
-HOME = ./../../
+HOME = ./..
 WRITERS = $(HOME)/utils/Writers
-PROTO_DIR =/Users/evelez/code/lbl/vortex-2d/proto/include
+PROTO_DIR = $(HOME)/proto/include
 FFT = $(HOME)/src/fftTools
 CONV = $(HOME)/src/Hockney
 PARTICLES = $(HOME)/src/Particles
@@ -23,7 +23,7 @@ odir = ./o.$(DIM)d
 ddir = ./d.$(DIM)d
 
 CXXFLAGS += -DDIM=$(DIM) -D ANIMATION=$(ANIMATION)
-LIBS:=  -L$(FFTWDIR)/lib -lfftw3 
+LIBS:=  -L$(FFTWDIR)/lib -lfftw3
 
 SRCFILES:= $(notdir $(wildcard $(TIMER)/*.cpp $(PROTO_DIR)/*.cpp $(WRITERS)/*.cpp $(FFT)/*.cpp ./*.cpp $(CONV)/*.cpp $(PARTICLES)/*.cpp))
 
@@ -36,13 +36,13 @@ $(odir)/%.o:%.cpp GNUmakefile
 	mkdir -p $(odir);$(CXX) -c $(CXXFLAGS) $< -o $@
 	mkdir -p $(ddir);$(CXX) -MM $(CXXFLAGS) $< | sed '1s/^/o.$(DIM)d\//' > $*.d;mv $*.d $(ddir)
 
-vortex2D: GNUmakefile util.cpp w.cpp $(OBJS) 
+vortex2D: GNUmakefile util.cpp w.cpp $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OBJS) $(LIBS) -o execPlot
 
 -include $(DEPS)
 
 clean:
-	rm -r *.exe $(odir) $(ddir) *.vtk 
+	rm -r *.exe $(odir) $(ddir) *.vtk
 
 listsrc:
 	@echo $(SRCFILES)
