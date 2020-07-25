@@ -1,5 +1,5 @@
-#include "w.h"
 #include "interpolate.h"
+#include "w.h"
 #include <array>
 #include <cmath>
 #include <iterator>
@@ -18,12 +18,12 @@ std::map<double (*)(double), std::tuple<int, int>> r_map = {
     {W_4, std::make_tuple(-1, 2)},
     {W_6, std::make_tuple(-2, 3)}};
 
-
-bool point_is_present_in_vector(const Point &point_to_find, const shared_ptr<vector<Point>> &vec) {
-    if (find(vec->begin(), vec->end(), point_to_find) != vec->end()) {
-        return true;
-    }
-    return false;
+bool point_is_present_in_vector(const Point &point_to_find,
+                                const shared_ptr<vector<Point>> &vec) {
+  if (find(vec->begin(), vec->end(), point_to_find) != vec->end()) {
+    return true;
+  }
+  return false;
 }
 
 void complete_grid(shared_ptr<vector<Point>> &points_to_consider, const Point &to_add) {
@@ -34,20 +34,20 @@ void complete_grid(shared_ptr<vector<Point>> &points_to_consider, const Point &t
     points_to_consider->push_back(to_add);
   }
 
-    Point new_1(to_add[0] + 1, to_add[1]);
-    if (!point_is_present_in_vector(new_1, points_to_consider)) {
-        points_to_consider->push_back(new_1);
-    }
+  Point new_1(to_add[0] + 1, to_add[1]);
+  if (!point_is_present_in_vector(new_1, points_to_consider)) {
+    points_to_consider->push_back(new_1);
+  }
 
-    Point new_2(to_add[0], to_add[1] + 1);
-    if (!point_is_present_in_vector(to_add, points_to_consider)) {
-      points_to_consider->push_back(new_2);
-    }
+  Point new_2(to_add[0], to_add[1] + 1);
+  if (!point_is_present_in_vector(to_add, points_to_consider)) {
+    points_to_consider->push_back(new_2);
+  }
 
-    Point new_3(to_add[0] + 1, to_add[1] + 1);
-    if (!point_is_present_in_vector(to_add, points_to_consider)) {
-      points_to_consider->push_back(new_3);
-    }
+  Point new_3(to_add[0] + 1, to_add[1] + 1);
+  if (!point_is_present_in_vector(to_add, points_to_consider)) {
+    points_to_consider->push_back(new_3);
+  }
 }
 
 shared_ptr<vector<Point>> compute_points_to_consider(const Point &original_point) {
@@ -56,7 +56,8 @@ shared_ptr<vector<Point>> compute_points_to_consider(const Point &original_point
   auto r_low = get<0>(r_tuple);
 
   auto points_to_consider = make_shared<vector<Point>>();
-  
+
+  complete_grid(points_to_consider, original_point);
   for (int i = r_low; i < r_high; ++i) {
     Point new_1(original_point[0] + i, original_point[1]);
     complete_grid(points_to_consider, new_1);
@@ -70,24 +71,33 @@ shared_ptr<vector<Point>> compute_points_to_consider(const Point &original_point
 }
 
 // m_dx is h_g
-array<array<double, DIM>, DIM> interpolate(const BoxData<double> G_i[DIM][DIM], const Point &original_i, const Particle &x_k, const double &h_g) {
-    array<array<double, DIM>, DIM> G_k;
-    Point new_i(floor(original_i[0]/h_g), floor(original_i[0]/h_g));
-    auto grid_points = compute_points_to_consider(new_i);
-    for (auto i : *grid_points) {
-
-        Point x_bar(i[0] * h_g, i[1] * h_g);
-        Point z(x_k.m_x[0] - x_bar[0], x_k.m_x[1] - x_bar[1]);
-        // w_ptr = W_2 function
-        double W_value = W(z, h_g, w_ptr);
-
-        // Multiply G_i by W_value and incrememnt G_k matrix by G_i
-        for (int i = 0; i < DIM; ++i) {
-            for (int j = 0; j < DIM; ++j) {
-                G_k[i][j] += G_i[i][j](Point(0, 0)) * W_value;
-            }
-        }
+array<array<double, DIM>, DIM> interpolate(const BoxData<double> G_i[DIM][DIM],
+                                           const Particle &x_k,
+                                           const double &h_g)
+{
+  // cout << "BEGIN INTERPOLATION FUNC" << endl;
+  array<array<double, DIM>, DIM> G_k;
+  for (int i = 0; i < DIM; ++i) {
+    for (int j = 0; j < DIM; ++j) {
+      G_k[i][j] = 0;
     }
+  }
+  // multidimensional interpolation algorithm
+  Point left_hand_corner(floor(x_k.m_alpha[0] / h_g), floor(x_k.m_alpha[0] / h_g));
+  auto grid_points = compute_points_to_consider(left_hand_corner);
+  for (auto i_pos : *grid_points) {
+    Point x_bar(i_pos[0] * h_g, i_pos[1] * h_g);
+    Point z(x_k.m_alpha[0] - x_bar[0], x_k.m_alpha[1] - x_bar[1]);
+    // w_ptr = W_2 function
+    double W_value = W(z, h_g, w_ptr);
 
-    return G_k;
+    // Multiply G_i by W_value and incrememnt G_k matrix by G_i
+    for (int i = 0; i < DIM; ++i) {
+      for (int j = 0; j < DIM; ++j) {
+        G_k[i][j] += G_i[i][j](i_pos) * W_value;
+      }
+    }
+  }
+
+  return G_k;
 }

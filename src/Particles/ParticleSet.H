@@ -20,7 +20,7 @@ public:
   ParticleShift(){};
   ~ParticleShift(){};
   void init(const ParticleSet& a_particles);
-  void increment(double a_scale, 
+  void increment(double a_scale,
                  const ParticleShift& a_rhs);
   void operator*=(double a_scale);
   void setToZero();
@@ -31,7 +31,8 @@ public:
   ParticleSet(
               shared_ptr<ConvKernel>& a_kerptr,
               Box& a_box,
-              double& a_dx, 
+              double& a_dx,
+              double& a_hp,
               array<double, DIM>& a_lowCorner,
               int a_M);
 
@@ -39,6 +40,7 @@ public:
   ~ParticleSet(){};
   vector<Particle> m_particles;
   double m_dx;
+  double m_hp;
   Box m_box;
   array<double,DIM> m_lowCorner;
   Hockney m_hockney;

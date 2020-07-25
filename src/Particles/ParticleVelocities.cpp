@@ -36,9 +36,9 @@ void ParticleVelocities::operator()
   Point e1 = Point::Basis(1);
   rhs.setVal(0.);
   PR_START(t1);
-  
+
   int N = a_state.m_box.high()[1];
-  
+
   const vector<Particle >& oldPart = a_state.m_particles;
   vector<DX >& dPart = a_k.m_particles;
   // loop evaluates Psi, the field (rhs)
@@ -60,8 +60,8 @@ void ParticleVelocities::operator()
 				(1.- xpos[1] + (2*xpos[1] - 1.)*l1)*oldPart[k].strength;
 			}
 		}
-	  
 	}
+
   PR_STOP(t1);
   PR_START(t2);
   a_state.m_hockney.convolve(rhs);
@@ -79,7 +79,68 @@ void ParticleVelocities::operator()
 		  field[l](pt) = (rhs(pt + evec) - rhs(pt - evec))/(2*a_state.m_dx);
 		}
 	}
-  
+
+  // Equation 63 Calculate G_i
+  BoxData<double> G_i_data[DIM][DIM];
+  for (int i = 0; i < DIM; ++i)
+  {
+    for (int j = 0; j < DIM; ++j)
+    {
+      G_i_data[i][j].define(gradBox);
+      for (auto it = G_i_data[i][j].box().begin(); it != G_i_data[i][j].box().end(); ++it)
+      {
+        auto current_point = *it;
+        // determine which derivative to calculate based on the current iterations
+        double val;
+        if (i == 0 && j == 0)
+          val = -second_diff_xy(a_state.m_dx, current_point, rhs);
+        else if (i == 0 && j == 1)
+          val = 0.5 * (second_diff(0, a_state.m_dx, current_point, rhs) - second_diff(1, a_state.m_dx, current_point, rhs));
+        else if (i == 1 && j == 0)
+          val = 0.5 * (second_diff(0, a_state.m_dx, current_point, rhs) - second_diff(1, a_state.m_dx, current_point, rhs));
+        else if (i == 1 && j == 1)
+          val = second_diff_xy(a_state.m_dx, current_point, rhs);
+
+        G_i_data[i][j](current_point) = val;
+      }
+    }
+  }
+
+  for (int k = 0; k < a_state.m_particles.size(); ++k)
+  {
+    // equation 63, pass values to interpolation
+    auto G_k = interpolate(G_i_data, a_state.m_particles[k], a_state.m_dx);
+    auto omega_k = a_state.m_particles[k].strength * pow(a_state.m_dx, 2.0) / pow(a_state.m_hp, 2.0);
+    G_k[0][1] += omega_k;
+    G_k[1][0] += -omega_k;
+
+    // save the transpose of the gradient
+    array<array<double, DIM>, DIM> f_k_transpose;
+    for (int i = 0; i < DIM; ++i)
+    {
+      for (int j = 0; j < DIM; ++j)
+      {
+        f_k_transpose[i][j] = a_state.m_particles[k].m_gradx[j][i];
+      }
+    }
+    // end transpose
+
+    // Equation 62, right hand side, evolve gradient
+    for (int i = 0; i < DIM; ++i)
+    {
+      for (int j = 0; j < DIM; ++j)
+      {
+        // extra loop for matrix multiplication
+        for (int z = 0; z < DIM; ++z)
+        {
+          a_state.m_particles[k].m_gradx[i][j] += f_k_transpose[i][z] * G_k[z][j];
+        }
+      }
+    }
+    a_k.m_particles[k].m_gradx = a_state.m_particles[k].m_gradx;
+  }
+  // end equation 62, rhs
+
   for (int k = 0; k < a_state.m_particles.size(); k++)
 	{
 
@@ -100,7 +161,7 @@ void ParticleVelocities::operator()
 		  double field10 = field[dirperp](pt + e0);
 		  double field01 = field[dirperp](pt + e1);
 		  double field11 = field[dirperp](pt + e0 + e1);
-		 
+
 		  vel[dir] =
 			(field00*(1.-xpos[0])*(1. - xpos[1]) +
 			 field10*(xpos[0])*(1.-xpos[1]) +
@@ -109,36 +170,17 @@ void ParticleVelocities::operator()
 		  dPart[k].m_x[dir] = vel[dir]*a_dt;
 		}
 	  double velmag = sqrt(vel[0]*vel[0] + vel[1]*vel[1]);
-	  // cout << "velmag at " << k << " = " << velmag <<endl; 
+	  // cout << "velmag at " << k << " = " << velmag <<endl;
 	  //cout << "vel at particle " << k << " = " << vel[0] << " , " << vel[1] << endl;
-
-    // BEGIN deformation changes
-    // code compiles but needs runtime testing
-    double second_diff_x = second_diff(0, a_state.m_dx, ipos, rhs);
-    double second_diff_y = second_diff(1, a_state.m_dx, ipos, rhs);
-    double second_diff_xy_val = second_diff_xy(a_state.m_dx, ipos, rhs);
-    BoxData<double> G_i[DIM][DIM];
-    for (int i = 0; i < DIM; ++i) {
-      for (int j = 0; j < DIM; ++j) {
-        auto new_cube = Box::Cube(1); // not sure if it should be cube
-        G_i[i][j].define(new_cube);
-      }
-    }
-    // the following accessors might throw exceptions, but once ran can debug
-    G_i[0][0](Point(0, 0)) = -second_diff_xy_val;
-    G_i[0][1](Point(0, 0)) = 0.5 * (second_diff_x - second_diff_y);
-    G_i[1][0](Point(0, 0)) = 0.5 * (second_diff_x - second_diff_y);
-    G_i[1][1](Point(0, 0)) = second_diff_xy_val;
-
-    auto G_k = interpolate(G_i, ipos, a_state.m_particles.at(k), a_state.m_dx);
-    double omega_k = (a_state.m_particles[k].strength * pow(a_state.m_dx, 2.0)); // missing h_p, unsure what variable would correspond
-    G_k[0][1] += omega_k;
-    G_k[1][0] += -omega_k;
-    // END deformation changes
 	}
   PR_STOP(t3);
 };
 
+/**
+ * The finite difference for a second derivative with a respect to a single variable
+ *
+ * \param axis the variable (x or y) of the derivative
+ */
 double second_diff(const int &axis, const double &dx, Point i, const BoxData<double> &function_data) {
 	// axis 0 = x, axis 1 = y
 	if (axis == 0) {
@@ -157,6 +199,9 @@ double second_diff(const int &axis, const double &dx, Point i, const BoxData<dou
 	}
 }
 
+/**
+ * The finite difference of a partial derivative with respect to x then y
+ */
 double second_diff_xy(const double &dx, Point i, const BoxData<double> &function_data) {
 	Point first(i[0] + 1, i[0] +1);
   Point second(i[0] + 1, i[1] - 1);

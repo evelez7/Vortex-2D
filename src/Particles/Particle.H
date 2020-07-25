@@ -10,25 +10,38 @@ class DX
 public:
   DX()
   {
-    for(unsigned int i=0; i<DIM; i++) 
+    for(unsigned int i=0; i<DIM; i++)
       {
 	m_x[i]=0;
       }
-  } 
+  }
   array<double, DIM> m_x;
-  array<array<double, DIM >, DIM > m_gradx;
+  array<array<double, DIM >, DIM > m_gradx {
+    {
+      {{1, 0}},
+      {{0, 1}}
+    }
+  };
   inline void increment(double a_scale, const DX& a_rhs)
   {
-    for(unsigned int i=0; i<DIM; i++) 
+    for(unsigned int i=0; i<DIM; i++)
       {
-	m_x[i]+=a_scale*a_rhs.m_x[i];
+	      m_x[i]+=a_scale*a_rhs.m_x[i];
+        for (unsigned int j=0; j<DIM; ++j)
+        {
+          m_gradx[i][j] += a_scale*a_rhs.m_x[i];
+        }
       }
   }
   inline void operator*=(double a_scale)
   {
-    for(unsigned int i=0; i<DIM; i++) 
+    for(unsigned int i=0; i<DIM; i++)
       {
-	m_x[i]*=a_scale;
+	      m_x[i]*=a_scale;
+        for (unsigned int j=0; j<DIM; ++j)
+        {
+          m_gradx[i][j] *= a_scale;
+        }
       }
   }
 };
@@ -38,12 +51,21 @@ public:
   array<double, DIM> m_x;
   double strength;
   array<double, DIM> m_alpha;
-  array<array<double, DIM>, DIM> m_gradx;
+  array<array<double, DIM>, DIM> m_gradx {
+    {
+      {{1, 0}},
+      {{0, 1}}
+    }
+  };
   inline void increment(const DX& a_shift)
   {
-    for(unsigned int i=0; i<DIM; i++) 
+    for(unsigned int i=0; i<DIM; i++)
       {
-	m_x[i]+=a_shift.m_x[i];
+	      m_x[i]+=a_shift.m_x[i];
+        for (unsigned int j= 0; j<DIM; ++j)
+        {
+          m_gradx[i][j] += a_shift.m_x[i];
+        }
       }
   }
 };
