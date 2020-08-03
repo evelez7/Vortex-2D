@@ -80,7 +80,7 @@ void ParticleVelocities::operator()
 		}
 	}
 
-  // Equation 63 Calculate G_i
+  // Equation 63 Calculate G_i matrix
   BoxData<double> G_i_data[DIM][DIM];
   for (int i = 0; i < DIM; ++i)
   {
@@ -108,9 +108,10 @@ void ParticleVelocities::operator()
 
   for (int k = 0; k < a_state.m_particles.size(); ++k)
   {
-    // equation 63, pass values to interpolation
+    // equation 70, pass values to interpolation
     auto G_k = interpolate(G_i_data, a_state.m_particles[k], a_state.m_dx);
-    auto omega_k = a_state.m_particles[k].strength * pow(a_state.m_dx, 2.0) / pow(a_state.m_hp, 2.0);
+    auto omega_k = oldPart[k].strength * pow(a_state.m_dx, 2.0) / pow(a_state.m_hp, 2.0);
+    // equation 70, add omega_k
     G_k[0][1] += omega_k;
     G_k[1][0] += -omega_k;
 
@@ -133,11 +134,13 @@ void ParticleVelocities::operator()
         // extra loop for matrix multiplication
         for (int z = 0; z < DIM; ++z)
         {
-          a_state.m_particles[k].m_gradx[i][j] += f_k_transpose[i][z] * G_k[z][j];
+          dPart[k].m_gradx[i][j] += f_k_transpose[i][z] * G_k[z][j];
         }
+          // cout << dPart[k].m_gradx[i][j] << " ";
       }
+      // cout << endl;
     }
-    a_k.m_particles[k].m_gradx = a_state.m_particles[k].m_gradx;
+    // cout << endl;
   }
   // end equation 62, rhs
 

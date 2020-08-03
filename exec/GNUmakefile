@@ -2,12 +2,12 @@
 # at the top of your makefile. Then follow with your rules.
 HOME = ./..
 WRITERS = $(HOME)/utils/Writers
-PROTO_DIR = /Users/colella/Desktop/gitstuff/resources/proto/include
+PROTO_DIR = $(HOME)/proto/include/ 
 FFT = $(HOME)/src/fftTools
 CONV = $(HOME)/src/Hockney
 PARTICLES = $(HOME)/src/Particles
 TIMER = $(HOME)/utils/timer
-VPATH= $(HOME) $(PARTICLES) $(PROTO_DIR) $(FFT) $(CONV) $(TIMER) $(WRITERS)
+VPATH= . $(HOME) $(PARTICLES) $(PROTO_DIR) $(FFT) $(CONV) $(TIMER) $(WRITERS)
 ANIMATION = 1
 
 DIM=2
