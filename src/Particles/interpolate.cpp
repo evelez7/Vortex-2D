@@ -6,6 +6,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 using namespace Proto;
@@ -84,11 +85,9 @@ array<array<double, DIM>, DIM> interpolate(const BoxData<double> G_i[DIM][DIM],
       {{0, 0}}
     }
   };
-  // cout << "INTERPOLATE BEGIN" << endl;
   // multidimensional interpolation algorithm
   Point left_hand_corner(floor(x_k.m_x[0] / h_g), floor(x_k.m_x[0] / h_g));
   auto grid_points = compute_points_to_consider(left_hand_corner);
-  // auto grid_points = compute_points_to_consider(Point(x_k.m_alpha[0], x_k.m_alpha[1]));
   for (auto i_pos : grid_points) {
     Point x_bar(i_pos[0] * h_g, i_pos[1] * h_g);
     Point z(x_k.m_x[0] - x_bar[0], x_k.m_x[1] - x_bar[1]);
