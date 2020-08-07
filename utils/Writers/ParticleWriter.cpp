@@ -331,19 +331,11 @@ void PWrite(const char* a_filename, const ParticleSet* a_p)
       //equation 30-32
       auto eigenvalues = get_sym_eigenvalues(A_t_A); // get the eigenvalues from the symmetric part of the polar decomp
       double eigen_product = eigenvalues[0] * eigenvalues[1];
-      cout << eigen_product << endl;
       array<array<double, DIM>, DIM> eigenvectors;
-      bool eigen;
       // avoid dividing by zero by checking for zeros in matrix, might be a bug but one or two zero matrices pop up
       if (!is_zero_matrix(p.m_gradx))
       {
         eigenvectors = find_eigenvectors(p.m_gradx, eigenvalues);
-        eigen = true;
-        collect_eigenvector_errors(p.m_gradx, eigenvectors, eigenvalues, errors);
-      } else
-      {
-        // do not find eigenvectors of an empty matrix
-        eigen = false;
       }
 
       double max_eigenvalue = -INFINITY;
