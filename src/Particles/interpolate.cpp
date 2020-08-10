@@ -76,21 +76,20 @@ vector<Point> compute_points_to_consider(const Point &original_point) {
 // m_dx is h_g
 array<array<double, DIM>, DIM> interpolate(const BoxData<double> G_i[DIM][DIM],
                                            const Particle &x_k,
-                                           const double &h_g)
+                                           const double &h_g,
+                                           const double& h_p)
 {
   // cout << "BEGIN INTERPOLATION FUNC" << endl;
-  array<array<double, DIM>, DIM> G_k{
-    {
-      {{0, 0}},
-      {{0, 0}}
-    }
-  };
+  array<array<double, DIM>, DIM> G_k;
+  for (int i=0; i<DIM; ++i)
+    for (int j=0; j<DIM;++j)
+      G_k[i][j] = 0;
   // multidimensional interpolation algorithm
-  Point left_hand_corner(floor(x_k.m_x[0] / h_g), floor(x_k.m_x[0] / h_g));
+  Point left_hand_corner(floor(x_k.m_alpha[0] / h_g), floor(x_k.m_alpha[1] / h_g));
   auto grid_points = compute_points_to_consider(left_hand_corner);
   for (auto i_pos : grid_points) {
     Point x_bar(i_pos[0] * h_g, i_pos[1] * h_g);
-    Point z(x_k.m_x[0] - x_bar[0], x_k.m_x[1] - x_bar[1]);
+    Point z(x_k.m_alpha[0] - x_bar[0], x_k.m_alpha[1] - x_bar[1]);
     // w_ptr = W_2 function
     double W_value = W(z, h_g, w_ptr);
 
