@@ -18,8 +18,8 @@ public:
   array<double, DIM> m_x;
   array<array<double, DIM >, DIM > m_gradx {
     {
-      {{1, 0}},
-      {{0, 1}}
+      {{0, 0}},
+      {{0, 0}}
     }
   };
   inline void increment(double a_scale, const DX& a_rhs)
@@ -29,7 +29,8 @@ public:
 	      m_x[i]+=a_scale*a_rhs.m_x[i];
         for (unsigned int j=0; j<DIM; ++j)
         {
-          m_gradx[i][j] += a_scale*a_rhs.m_x[i];
+          // m_gradx[i][j] += a_scale*a_rhs.m_gradx[i][j];
+          m_gradx[i][j] += a_scale*m_gradx[i][j];
         }
       }
   }
@@ -64,7 +65,8 @@ public:
 	      m_x[i]+=a_shift.m_x[i];
         for (unsigned int j= 0; j<DIM; ++j)
         {
-          m_gradx[i][j] += a_shift.m_x[i];
+          // m_gradx[i][j] += a_shift.m_gradx[i][j];
+          m_gradx[i][j]+=m_gradx[i][j];
         }
       }
   }
