@@ -23,9 +23,9 @@ void outField(ParticleSet& a_state)
   Point e0 = Point::Basis(0);
   Point e1 = Point::Basis(1);
   field.setVal(0.);
-  
+
   int N = a_state.m_box.high()[1];
-  
+
   const vector<Particle >& oldPart = a_state.m_particles;
   for (int k = 0; k < a_state.m_particles.size(); k++)
     {
@@ -44,8 +44,8 @@ void outField(ParticleSet& a_state)
                 (1.- xpos[1] + (2*xpos[1] - 1.)*l1)*oldPart[k].strength;
             }
         }
-      
-    }  
+
+    }
   a_state.m_hockney.convolve(field);
   WriteBoxData("field",field);
 
@@ -78,7 +78,7 @@ void outVort(ParticleSet& p, int a_coarsenFactor,unsigned int a_nstep)
         {
           for (int l1=0;l1 < DIM ; l1++)
             {
-              outVort(pt+e0*l0 + e1*l1) += 
+              outVort(pt+e0*l0 + e1*l1) +=
                 (1.-xpos[0] + (2*xpos[0] - 1.)*l0)*
                 (1.- xpos[1] + (2*xpos[1] - 1.)*l1)*p.m_particles[k].strength/coarsenFactor/coarsenFactor;
             }
@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
 {
   unsigned int M;
   unsigned int N;
-  cout << "input log_2(number of grid points)" << endl; 
+  cout << "input log_2(number of grid points)" << endl;
   cin >> M;
   int test = 4;
   cout << "input particle refinement factor" << endl;
@@ -112,11 +112,12 @@ int main(int argc, char* argv[])
   int pcfactor = 4/cfactor;
   if (pcfactor < 1 ) pcfactor = 1;
   cout << "number of particles per cell = " << h*h/hp/hp << endl;
-  shared_ptr<CutoffKernel> cutkptr = 
+  shared_ptr<CutoffKernel> cutkptr =
     shared_ptr<CutoffKernel>(new CutoffKernel(h,delta));
   shared_ptr<ConvKernel> convkerptr = dynamic_pointer_cast<ConvKernel>(cutkptr);
   p.m_hockney.define(convkerptr,h,M);
   p.m_dx = h;
+  p.m_hp = hp;
   array<double,DIM> lowCorner;
   if (test == 1)
   {
@@ -126,7 +127,7 @@ int main(int argc, char* argv[])
       particle.m_x[1] = .24;
       particle.strength = 1./h/h;
   }
-  else if (test == 2) 
+  else if (test == 2)
     {
       p.m_particles.resize(2);
       Particle& particle = p.m_particles[0];
@@ -138,7 +139,7 @@ int main(int argc, char* argv[])
       particle2.m_x[1] = .5;
       particle2.strength = 1./h/h;
     }
-else if (test == 3) 
+else if (test == 3)
     {
       p.m_particles.resize(2);
       Particle& particle = p.m_particles[0];
@@ -187,16 +188,16 @@ else if (test == 3)
   kIn.init(p);
   kOut.init(p);
   kIn.setToZero();
-  ParticleVelocities pv; 
+  ParticleVelocities pv;
   double time = 0.;
   double dt = 140*.025/N;
   int m = 5000;
-  
+
   RK4<ParticleSet,ParticleVelocities,ParticleShift> integrator;
 #if ANIMATION
   outVort(p,pcfactor,0);
   PWrite(&p);
-#endif 
+#endif
   for(int i=0; i<m; i++)
     {
       integrator.advance(time, dt, p);
@@ -205,7 +206,7 @@ else if (test == 3)
       outVort(p,pcfactor,i);
       PWrite(&p);
 #endif
-      if (time >= timeStop) 
+      if (time >= timeStop)
         {
           break;
         }
@@ -216,7 +217,7 @@ else if (test == 3)
       double radius = sqrt(pow(part0.m_x[0] - .5,2) + pow(part0.m_x[1] - .5,2));
       cout << "test = "<<test << ": radial position of first particle = " <<
         radius << endl;
-      cout << "Cartesian position of first particle = " << part0.m_x[0] << " , " << part0.m_x[1] << endl; 
+      cout << "Cartesian position of first particle = " << part0.m_x[0] << " , " << part0.m_x[1] << endl;
     }
   outField(p);
   PR_TIMER_REPORT();
