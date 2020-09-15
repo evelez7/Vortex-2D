@@ -46,8 +46,6 @@ void PWrite(const char* a_filename, const ParticleSet* a_p)
   vars[3] = std::vector<double>(size);
   vars[4] = std::vector<double>(size);
   vars[5] = std::vector<double>(size);
-  auto errors = make_shared<vector<double>>();
-  int count = 0;
   for(unsigned int i=0; i<size; i++)
     {
       const Particle& p = a_p->m_particles[i];
@@ -57,12 +55,6 @@ void PWrite(const char* a_filename, const ParticleSet* a_p)
       auto eigenvalues = get_sym_eigenvalues(A_t_A); // get the eigenvalues from the symmetric part of the polar decomp
       double eigen_product = eigenvalues[0] * eigenvalues[1];
       auto grad_det = get_determinant(p.m_gradx);
-      array<array<double, DIM>, DIM> eigenvectors;
-      // avoid dividing by zero by checking for zeros in matrix, might be a bug but one or two zero matrices pop up
-      if (!is_zero_matrix(p.m_gradx))
-      {
-        eigenvectors = find_eigenvectors(p.m_gradx, eigenvalues);
-      }
 
       double max_eigenvalue = -INFINITY;
       // find greatest eigenvalue from the decomp
@@ -128,7 +120,6 @@ inline void write_point_mesh(const char* filename, int npts, double *pts,
         write_int(i,fp,numInColumn);
         end_line(fp,numInColumn);
     }
-
     centering = (int *) malloc(nvars*sizeof(int));
     for (i = 0 ; i < nvars ; i++)
         centering[i] = 1;
