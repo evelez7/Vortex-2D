@@ -89,7 +89,7 @@ array<double, DIM> get_roots(const array<double, 3>& characteristic_polynomial)
   double a = characteristic_polynomial[0];
   double b = characteristic_polynomial[1];
   double c = characteristic_polynomial[2];
-  double discriminant = pow(b, 2.0) - (4 * a * c);
+  double discriminant = pow(b, 2.0) - (4. * a * c);
   array<double, DIM> roots;
   if (discriminant > 0)
   {
@@ -97,15 +97,19 @@ array<double, DIM> get_roots(const array<double, 3>& characteristic_polynomial)
     roots[1] = (-b - sqrt(discriminant))/(2*a);
   } else if (discriminant == 0)
   {
-    roots[0] = -b/(2*a);
+    roots[0] = -b/(2.*a);
     roots[1]=roots[0];
+  } else if (discriminant < 0)
+  {
+    cout << "Imaginary case" << endl;
+    exit(-1);
   }
   return roots;
 }
 
 array<double, 3> get_characteristic_polynomial(const array<array<double, DIM>, DIM>& matrix)
 {
-  auto right_det = matrix[0][1] * matrix[1][0]; // the rhs of determinant, b*c
+  auto right_det = -1 * (matrix[0][1] * matrix[1][0]); // the rhs of determinant, b*c
   auto constant = matrix[0][0] * matrix[1][1];
   auto lambda_coeff_1 = -matrix[0][0];
   auto lambda_coeff_2 = -matrix[1][1];
@@ -113,7 +117,7 @@ array<double, 3> get_characteristic_polynomial(const array<array<double, DIM>, D
   array<double, 3> characteristic_polynomial;
   characteristic_polynomial[0] = 1;
   characteristic_polynomial[1] = lambda_coeff_1 + lambda_coeff_2;
-  characteristic_polynomial[2] = constant - right_det;
+  characteristic_polynomial[2] = constant + right_det;
   return characteristic_polynomial;
 }
 

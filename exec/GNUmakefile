@@ -2,7 +2,7 @@
 # at the top of your makefile. Then follow with your rules.
 HOME = ./..
 WRITERS = $(HOME)/utils/Writers
-PROTO_DIR = $(HOME)/proto/include/ 
+PROTO_DIR = $(HOME)/proto/include/
 FFT = $(HOME)/src/fftTools
 CONV = $(HOME)/src/Hockney
 PARTICLES = $(HOME)/src/Particles
@@ -14,7 +14,7 @@ DIM=2
 #CXX=g++
 CXX=clang++
 FFTWDIR = /usr/local
-#CXXFLAGS = -g -Wall
+# CXXFLAGS = -g -Wall
 CXXFLAGS = -O3
 CXXFLAGS += -std=c++11 -I$(PARTICLES) -I$(PROTO_DIR) -I$(FFT) -I$(CONV) -I$(TIMER) -I$(WRITERS) -I$(FFTWDIR)/include
 
@@ -22,7 +22,7 @@ odir = ./o.$(DIM)d
 ddir = ./d.$(DIM)d
 
 CXXFLAGS += -DDIM=$(DIM) -D ANIMATION=$(ANIMATION)
-LIBS:=  -L$(FFTWDIR)/lib -lfftw3 
+LIBS:=  -L$(FFTWDIR)/lib -lfftw3
 
 SRCFILES:= $(notdir $(wildcard $(TIMER)/*.cpp $(PROTO_DIR)/*.cpp $(WRITERS)/*.cpp $(FFT)/*.cpp $(CONV)/*.cpp $(PARTICLES)/*.cpp))
 
@@ -35,16 +35,16 @@ $(odir)/%.o:%.cpp GNUmakefile
 	mkdir -p $(odir);$(CXX) -c $(CXXFLAGS) $< -o $@
 	mkdir -p $(ddir);$(CXX) -MM $(CXXFLAGS) $< | sed '1s/^/o.$(DIM)d\//' > $*.d;mv $*.d $(ddir)
 
-vortex2D: GNUmakefile VortexTest.cpp $(OBJS) 
+vortex2D: GNUmakefile VortexTest.cpp $(OBJS)
 	$(CXX) VortexTest.cpp $(CXXFLAGS) $(OBJS) $(LIBS) -o vortex$(DIM)D.exe
 
-rotate2D: GNUmakefile RotateTest.cpp $(OBJS) 
+rotate2D: GNUmakefile RotateTest.cpp $(OBJS)
 	$(CXX) RotateTest.cpp $(CXXFLAGS) $(OBJS) $(LIBS) -o rotate$(DIM)D.exe
 
 -include $(DEPS)
 
 clean:
-	rm -r *.exe $(odir) $(ddir) *.vtk 
+	rm -r *.exe $(odir) $(ddir) *.vtk
 
 listsrc:
 	@echo $(SRCFILES)

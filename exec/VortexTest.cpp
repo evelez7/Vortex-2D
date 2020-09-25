@@ -190,8 +190,10 @@ else if (test == 3)
   kIn.setToZero();
   ParticleVelocities pv;
   double time = 0.;
-  double dt = 140*.025/N;
-  int m = 5000;
+  // double dt = 140*.025/N;
+  double dt = 0;
+  // int m = 5000;
+  int m = 1;
 
   RK4<ParticleSet,ParticleVelocities,ParticleShift> integrator;
 #if ANIMATION

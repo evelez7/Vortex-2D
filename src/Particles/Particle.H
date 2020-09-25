@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cassert>
 #include <array>
+#include <iostream>
 using namespace std;
 class DX
 {
@@ -29,8 +30,7 @@ public:
 	      m_x[i]+=a_scale*a_rhs.m_x[i];
         for (unsigned int j=0; j<DIM; ++j)
         {
-          // m_gradx[i][j] += a_scale*a_rhs.m_gradx[i][j];
-          m_gradx[i][j] += a_scale*m_gradx[i][j];
+          m_gradx[i][j] += a_scale*a_rhs.m_gradx[i][j];
         }
       }
   }
@@ -65,8 +65,7 @@ public:
 	      m_x[i]+=a_shift.m_x[i];
         for (unsigned int j= 0; j<DIM; ++j)
         {
-          // m_gradx[i][j] += a_shift.m_gradx[i][j];
-          m_gradx[i][j]+=m_gradx[i][j];
+          m_gradx[i][j] += a_shift.m_gradx[i][j];
         }
       }
   }

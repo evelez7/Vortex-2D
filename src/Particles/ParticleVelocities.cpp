@@ -18,6 +18,9 @@ using namespace Proto;
 
 double second_diff(const int &, const double &, Point, const BoxData<double> &);
 double second_diff_xy(const double &, Point, const BoxData<double> &);
+double G_deriv(const array<int, DIM>&, const Point&, const double&, const BoxData<double>&);
+double G_deriv_original(const array<int, DIM>&, const Point&, const double&, const BoxData<double>&);
+void print_matrix_here(const array<array<double, DIM>, DIM>&);
 
 ParticleVelocities:: ParticleVelocities(){};
 void ParticleVelocities::operator()
@@ -90,15 +93,8 @@ void ParticleVelocities::operator()
       for (auto it = G_i_data[i][j].box().begin(); it != G_i_data[i][j].box().end(); ++it)
       {
         auto current_point = *it;
-        // determine which derivative to calculate based on the current iterations
-        double val;
-        if (i == 0 && j == 0)
-          val = -second_diff_xy(a_state.m_dx, current_point, rhs);
-        else if ((i == 0 && j == 1) || (i==1 && j==0))
-          val = 0.5 * (second_diff(0, a_state.m_dx, current_point, rhs) - second_diff(1, a_state.m_dx, current_point, rhs));
-        else if (i == 1 && j == 1)
-          val = second_diff_xy(a_state.m_dx, current_point, rhs);
-
+        array<int, DIM> index = {i, j};
+        double val = G_deriv(index, current_point, a_state.m_dx, rhs);
         G_i_data[i][j](current_point) = val;
       }
     }
@@ -107,7 +103,8 @@ void ParticleVelocities::operator()
   for (int k = 0; k < a_state.m_particles.size(); ++k)
   {
     // equation 70, pass values to interpolation
-    auto G_k = interpolate(G_i_data, a_state.m_particles[k], a_state.m_dx, a_state.m_hp);
+    // auto G_k = interpolate(G_i_data, a_state.m_particles[k], a_state.m_dx, a_state.m_hp);
+    auto G_k = interpolate_array(G_i_data, a_state.m_particles[k], a_state.m_dx, a_state.m_hp);
     auto omega_k = a_state.m_particles[k].strength * pow(a_state.m_dx / a_state.m_hp, 2.0);
     // equation 70, add omega_k
     G_k[0][1] += 0.5 * omega_k;
@@ -119,15 +116,19 @@ void ParticleVelocities::operator()
 
       for (int j = 0; j < DIM; ++j)
       {
+        double temp = dPart[k].m_gradx[i][j];
         // extra loop for matrix multiplication
         for (int z = 0; z < DIM; ++z)
         {
-          dPart[k].m_gradx[i][j] += G_k[i][z] * a_state.m_particles[k].m_gradx[z][j];
+          temp += G_k[i][z] * a_state.m_particles[k].m_gradx[z][j];
+
         }
+        dPart[k].m_gradx[i][j] += temp;
       }
     }
   }
   // end equation 62, rhs
+
 
   for (int k = 0; k < a_state.m_particles.size(); k++)
 	{
@@ -164,28 +165,77 @@ void ParticleVelocities::operator()
   PR_STOP(t3);
 };
 
+double G_deriv(const array<int, DIM>& index, const Point& current_point, const double& m_dx, const BoxData<double>& rhs)
+{
+
+        // determine which derivative to calculate based on the current iterations
+        double val;
+        int i = index[0]; int j = index[1];
+        if (i == 0 && j == 0)
+        {
+
+          val = -second_diff_xy(m_dx, current_point, rhs);
+        }
+        else if ((i == 0 && j == 1) || (i==1 && j==0))
+        {
+
+          val = 0.5 * (second_diff(0, m_dx, current_point, rhs) - second_diff(1, m_dx, current_point, rhs));
+        }
+        else if (i == 1 && j == 1)
+        {
+
+          val = second_diff_xy(m_dx, current_point, rhs);
+        }
+
+        return val;
+}
+
+double G_deriv_original(const array<int, DIM>& index, const Point& current_point,  const double& m_dx, const BoxData<double>& rhs)
+{
+  int i = index[0]; int j = index[1];
+  double val;
+  if (i == 0 && j == 0)
+  {
+    val = -second_diff_xy(m_dx, current_point, rhs);
+  }
+  else if (i == 0 && j == 1)
+  {
+    val=-second_diff(1, m_dx, current_point, rhs);
+  }
+  else if (i == 1 && j == 0)
+  {
+    val = second_diff(0, m_dx, current_point, rhs);
+  }
+  else if (i == 1 && j == 1)
+  {
+    val = second_diff_xy(m_dx, current_point, rhs);
+  }
+  return val;
+}
+
 /**
  * The finite difference for a second derivative with a respect to a single variable
  *
  * \param axis the variable (x or y) of the derivative
  */
-double second_diff(const int &axis, const double &dx, Point i, const BoxData<double> &function_data) {
+double second_diff(const int &axis, const double &dx, const Point i, const BoxData<double> &function_data) {
+  double sum;
 	// axis 0 = x, axis 1 = y
 	if (axis == 0) {
 		// the third element is just i
 		Point first(i[0] + 1, i[1]);
 		Point third(i[0] - 1, i[1]);
-		double sum = function_data(first) + (-2.0 * function_data(i)) + function_data(third);
-		return (sum / pow(dx, 2.0));
+		sum = function_data(first) + (-2.0 * function_data(i)) + function_data(third);
 	} else if (axis == 1) {
 		Point first(i[0], i[1] + 1);
 		Point third(i[0], i[1] - 1);
-		double sum = function_data(first) + (-2.0 * function_data(i)) + function_data(third);
-		return (sum / pow(dx, 2.0));
+		sum = function_data(first) + (-2.0 * function_data(i)) + function_data(third);
 	} else {
 		throw runtime_error("axis not in 2D");
 	}
+  return (sum / pow(dx, 2.0));
 }
+
 
 /**
  * The finite difference of a partial derivative with respect to x then y
@@ -197,4 +247,17 @@ double second_diff_xy(const double &dx, Point i, const BoxData<double> &function
   Point fourth(i[0] - 1, i[1] - 1);
   double sum = function_data(first) - function_data(second) - function_data(third) + function_data(fourth);
   return sum / (4 * pow(dx, 2.0));
+}
+
+void print_matrix_here(const array<array<double, DIM>, DIM>& matrix)
+{
+  for (int i=0; i<DIM; ++i)
+  {
+    for (int j=0; j<DIM; ++j)
+    {
+      cout << matrix[i][j] << " ";
+    }
+    cout << endl;
+  }
+  cout << endl;
 }

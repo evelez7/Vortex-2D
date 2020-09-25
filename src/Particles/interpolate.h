@@ -7,5 +7,6 @@
 #include <array>
 
 std::array<std::array<double, DIM>, DIM> interpolate(const Proto::BoxData<double> [DIM][DIM], const Particle&, const double&, const double&);
+std::array<std::array<double, DIM>, DIM> interpolate_array(const Proto::BoxData<double> [DIM][DIM], const Particle&, const double&, const double&);
 
 #endif
