@@ -103,9 +103,8 @@ void ParticleVelocities::operator()
   for (int k = 0; k < a_state.m_particles.size(); ++k)
   {
     // equation 70, pass values to interpolation
-    // auto G_k = interpolate(G_i_data, a_state.m_particles[k], a_state.m_dx, a_state.m_hp);
-    auto G_k = interpolate_array(G_i_data, a_state.m_particles[k], a_state.m_dx, a_state.m_hp);
     auto omega_k = a_state.m_particles[k].strength * pow(a_state.m_dx / a_state.m_hp, 2.0);
+    auto G_k = interpolate_array(G_i_data, a_state.m_particles[k], a_state.m_dx, omega_k);
     // equation 70, add omega_k
     G_k[0][1] += 0.5 * omega_k;
     G_k[1][0] += 0.5 *(-omega_k);
@@ -113,22 +112,17 @@ void ParticleVelocities::operator()
     // Equation 62, right hand side, evolve gradient
     for (int i = 0; i < DIM; ++i)
     {
-
       for (int j = 0; j < DIM; ++j)
       {
-        double temp = dPart[k].m_gradx[i][j];
         // extra loop for matrix multiplication
+        dPart[k].m_gradx[i][j] = 0;
         for (int z = 0; z < DIM; ++z)
-        {
-          temp += G_k[i][z] * a_state.m_particles[k].m_gradx[z][j];
-
-        }
-        dPart[k].m_gradx[i][j] += temp;
+          dPart[k].m_gradx[i][j] += G_k[i][z] * a_state.m_particles[k].m_gradx[z][j];
+        dPart[k].m_gradx[i][j] *= a_dt;
       }
     }
   }
   // end equation 62, rhs
-
 
   for (int k = 0; k < a_state.m_particles.size(); k++)
 	{

@@ -61,17 +61,17 @@ double W_6(double x) {
 
 double W(const std::array<double, DIM>&z, const double &h_g, double (*w_ptr)(double)) {
     double product = 1.0;
-    for (int i = 0; i < DIM; ++i) {
+    for (int i = 0; i < DIM; ++i)
         product*=w_ptr(z[i] / h_g);
-    }
-    return product / pow(h_g, DIM);
+    // return product / pow(h_g, DIM);
+    return product;
 }
 double W(const Point &z, const double &h_g, double (*w_ptr)(double)) {
     double product = 1.0;
-    for (int i = 0; i < DIM; ++i) {
+    for (int i = 0; i < DIM; ++i)
         product*=w_ptr(z[i] / h_g);
-    }
-    return product / (pow(h_g, DIM));
+    // return product / (pow(h_g, DIM));
+    return product;
 }
 
 std::string get_W_name(double (*w_script)(double)) {

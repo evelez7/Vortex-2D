@@ -22,7 +22,7 @@ double get_determinant(const array<array<double, DIM>, DIM>& matrix)
   double c = matrix.at(1).at(0);
   double d = matrix.at(1).at(1);
 
-  return (a*d) - (b*c);
+  return (a*d) + (-1. * (b*c));
 }
 
 array<array<double, DIM>, DIM> multiply_matrices(const array<array<double, DIM>, DIM>& first, const array<array<double, DIM>, DIM>& second)
@@ -89,7 +89,7 @@ array<double, DIM> get_roots(const array<double, 3>& characteristic_polynomial)
   double a = characteristic_polynomial[0];
   double b = characteristic_polynomial[1];
   double c = characteristic_polynomial[2];
-  double discriminant = pow(b, 2.0) - (4. * a * c);
+  double discriminant = pow(b, 2.) - (4. * a * c);
   array<double, DIM> roots;
   if (discriminant > 0)
   {
@@ -109,7 +109,7 @@ array<double, DIM> get_roots(const array<double, 3>& characteristic_polynomial)
 
 array<double, 3> get_characteristic_polynomial(const array<array<double, DIM>, DIM>& matrix)
 {
-  auto right_det = -1 * (matrix[0][1] * matrix[1][0]); // the rhs of determinant, b*c
+  auto right_det = (matrix[0][1] * matrix[1][0]); // the rhs of determinant, b*c
   auto constant = matrix[0][0] * matrix[1][1];
   auto lambda_coeff_1 = -matrix[0][0];
   auto lambda_coeff_2 = -matrix[1][1];
@@ -117,7 +117,7 @@ array<double, 3> get_characteristic_polynomial(const array<array<double, DIM>, D
   array<double, 3> characteristic_polynomial;
   characteristic_polynomial[0] = 1;
   characteristic_polynomial[1] = lambda_coeff_1 + lambda_coeff_2;
-  characteristic_polynomial[2] = constant + right_det;
+  characteristic_polynomial[2] = constant - right_det;
   return characteristic_polynomial;
 }
 

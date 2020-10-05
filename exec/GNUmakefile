@@ -21,7 +21,7 @@ CXXFLAGS += -std=c++11 -I$(PARTICLES) -I$(PROTO_DIR) -I$(FFT) -I$(CONV) -I$(TIME
 odir = ./o.$(DIM)d
 ddir = ./d.$(DIM)d
 
-CXXFLAGS += -DDIM=$(DIM) -D ANIMATION=$(ANIMATION)
+CXXFLAGS += -DDIM=$(DIM) -D ANIMATION=$(ANIMATION) -D VISIT_USE_BINARY=0
 LIBS:=  -L$(FFTWDIR)/lib -lfftw3
 
 SRCFILES:= $(notdir $(wildcard $(TIMER)/*.cpp $(PROTO_DIR)/*.cpp $(WRITERS)/*.cpp $(FFT)/*.cpp $(CONV)/*.cpp $(PARTICLES)/*.cpp))
@@ -45,6 +45,9 @@ rotate2D: GNUmakefile RotateTest.cpp $(OBJS)
 
 clean:
 	rm -r *.exe $(odir) $(ddir) *.vtk
+
+clear:
+	rm -r *.vtk
 
 listsrc:
 	@echo $(SRCFILES)
