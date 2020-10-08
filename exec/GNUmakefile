@@ -41,6 +41,9 @@ vortex2D: GNUmakefile VortexTest.cpp $(OBJS)
 rotate2D: GNUmakefile RotateTest.cpp $(OBJS)
 	$(CXX) RotateTest.cpp $(CXXFLAGS) $(OBJS) $(LIBS) -o rotate$(DIM)D.exe
 
+rk4: GNUmakefile rk4test.cpp $(OBJS)
+	$(CXX) rk4test.cpp $(CXXFLAGS) $(OBJS) $(LIBS) -o rk4test.exe
+
 -include $(DEPS)
 
 clean:

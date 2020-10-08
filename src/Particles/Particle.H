@@ -6,6 +6,7 @@
 #include <array>
 #include <iostream>
 using namespace std;
+class Particle;
 class DX
 {
 public:
@@ -44,6 +45,11 @@ public:
           m_gradx[i][j] *= a_scale;
         }
       }
+  }
+
+  inline void init(const Particle &a_state)
+  {
+
   }
 };
 class Particle

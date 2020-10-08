@@ -11,6 +11,7 @@
 #include "Proto_WriteBoxData.H"
 //#include "VisitWriter.H"
 #include "Proto_Timer.H"
+#include "util.h"
 #include "interpolate.h"
 
 using namespace std;
@@ -20,7 +21,6 @@ double second_diff(const int &, const double &, Point, const BoxData<double> &);
 double second_diff_xy(const double &, Point, const BoxData<double> &);
 double G_deriv(const array<int, DIM>&, const Point&, const double&, const BoxData<double>&);
 double G_deriv_original(const array<int, DIM>&, const Point&, const double&, const BoxData<double>&);
-void print_matrix_here(const array<array<double, DIM>, DIM>&);
 
 ParticleVelocities:: ParticleVelocities(){};
 void ParticleVelocities::operator()
@@ -241,17 +241,4 @@ double second_diff_xy(const double &dx, Point i, const BoxData<double> &function
   Point fourth(i[0] - 1, i[1] - 1);
   double sum = function_data(first) - function_data(second) - function_data(third) + function_data(fourth);
   return sum / (4 * pow(dx, 2.0));
-}
-
-void print_matrix_here(const array<array<double, DIM>, DIM>& matrix)
-{
-  for (int i=0; i<DIM; ++i)
-  {
-    for (int j=0; j<DIM; ++j)
-    {
-      cout << matrix[i][j] << " ";
-    }
-    cout << endl;
-  }
-  cout << endl;
 }
