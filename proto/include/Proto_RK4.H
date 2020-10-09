@@ -1,11 +1,13 @@
 #ifndef _PROTO_RK4_H_
 #define _PROTO_RK4_H_
+#include "util.h"
+#include <iostream>
 
 namespace Proto {
 
 ///  Generic Explicit RK4 Algorithm
 /**  class X is the type of your state data. class F provides an evaluation
-     of the X' for a specified state of X and the time.  If your X' is 
+     of the X' for a specified state of X and the time.  If your X' is
      determined entirely from the current state values then F can ignore.
      F must implement the function:
      @code
@@ -20,7 +22,7 @@ class RK4
 public:
     void advance(double& a_time, double& a_dt, X& a_state);
 protected:
-    dX m_k; 
+    dX m_k;
     dX m_delta;
     F m_f;
 };
@@ -30,7 +32,7 @@ void RK4<X, F, dX>::advance(double& a_time, double& a_dt, X& a_state)
 {
     double sixth = 1, third=1, half = 1;
     sixth/=6; third/=3; half/=2;
-  
+
     m_delta.init(a_state);
     m_k.init(a_state);                  // init must allocate stroage, and initialize it to zero.
     m_f(m_k, a_time, a_dt, a_state);    // compute k1
@@ -44,8 +46,15 @@ void RK4<X, F, dX>::advance(double& a_time, double& a_dt, X& a_state)
     m_f(m_k, a_time+a_dt, a_dt, a_state); // compute k4
     m_delta.increment(sixth, m_k);
     a_state.increment(m_delta);
+
+    // std::cout << "m_k in rk4" << std::endl;
+    // print_matrix_here(m_k.m_gradx);
+    // std::cout << "m_delta in rk4" << std::endl;
+    // print_matrix_here(m_delta.m_gradx);
+    // std::cout << "particle in rk4" << std::endl;
+    // print_matrix_here(a_state.m_gradx);
 }
 
 } //end Proto namespace
-  
+
 #endif //end include guard

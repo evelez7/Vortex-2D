@@ -64,30 +64,32 @@ double error_check(array<array<double, DIM>, DIM> exact, array<array<double, DIM
 
 int main(int argc, char** argv)
 {
-  double time = 0.25;
   array<double, 3> dt = {0.025, 0.0125, 0.00625};
   // array<double, 1> dt = {0};
 
   Proto::RK4<Particle, SingleParticleVelocity, DX> solver;
-  DX a_shift;
   Particle a_particle;
+  double time_max = 0.25; // limit the number of steps depending on dt
+  double t;
 
   for (int i=0; i < dt.size(); ++i)
   {
-    cout << "=======NEW ADVANCE at dt= " << dt[i] << "============" << endl;
-    solver.advance(time, dt[i], a_particle);
+    cout << "=======NEW ADVANCE with dt= " << dt[i] << "============" << endl;
+    for (t=0; t <= time_max; t+=dt[i])
+      solver.advance(t, dt[i], a_particle);
+
     cout << "PARTICLE AFTER ADVANCE" << endl;
     print_matrix_here(a_particle.m_gradx);
     cout << "REAL SOLUTION PARTICLE" << endl;
-    print_matrix_here(real_solution_part(dt[i]));
+    print_matrix_here(real_solution_part(t));
     cout << "REAL SOLUTION DX" << endl;
-    print_matrix_here(real_solution_dx(dt[i]));
+    print_matrix_here(real_solution_dx(t));
     cout << "PARTICLE ERROR" << endl;
-    cout << error_check(real_solution_part(dt[i]), a_particle.m_gradx) << endl;
-    // a_particle.m_gradx[0][0]=1;
-    // a_particle.m_gradx[0][1]=0;
-    // a_particle.m_gradx[1][0]=0;
-    // a_particle.m_gradx[1][1]=1;
+    cout << error_check(real_solution_part(t), a_particle.m_gradx) << endl;
+
+    for (int i=0; i<DIM; ++i)
+      for (int j=0; j<DIM; ++j)
+        a_particle.m_gradx[i][j] = 0;
   }
 
   return 0;

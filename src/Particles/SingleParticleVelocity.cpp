@@ -43,14 +43,9 @@ void SingleParticleVelocity::operator()(DX &a_shift, double a_time, double a_dt,
     {
       a_shift.m_gradx[i][j]=0;
       for (int k=0; k<DIM; ++k)
-        a_shift.m_gradx[i][j] += example[i][k] * a_particle.m_gradx[k][j];
-        // a_shift.m_gradx[i][j] += real_solution(a_dt)[i][k] * a_particle.m_gradx[k][j]* a_dt;
+        a_shift.m_gradx[i][j] += real_solution(a_time)[i][k] * a_particle.m_gradx[k][j];
+        // a_shift.m_gradx[i][j] += real_solution(a_dt)[i][k] * a_particle.m_gradx[k][j];
       a_shift.m_gradx[i][j] *= a_dt;
     }
   }
-
-    cout << "DX" << endl;
-    print_matrix_here(a_shift.m_gradx);
-    cout << "PARTICLE WITHIN OPERATOR" << endl;
-    print_matrix_here(a_particle.m_gradx);
 }
