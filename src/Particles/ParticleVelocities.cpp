@@ -109,6 +109,11 @@ void ParticleVelocities::operator()
     G_k[0][1] += 0.5 * omega_k;
     G_k[1][0] += 0.5 *(-omega_k);
 
+    array<array<double, DIM>, DIM> combined;
+    for (int i=0;i<DIM;++i)
+      for (int j=0; j<DIM; ++j)
+        combined[i][j] = a_state.m_particles[k].m_gradx[i][j] + a_k.m_particles[k].m_gradx[i][j];
+
     // Equation 62, right hand side, evolve gradient
     for (int i = 0; i < DIM; ++i)
     {
@@ -117,10 +122,12 @@ void ParticleVelocities::operator()
         // extra loop for matrix multiplication
         dPart[k].m_gradx[i][j] = 0;
         for (int z = 0; z < DIM; ++z)
-          dPart[k].m_gradx[i][j] += G_k[i][z] * a_state.m_particles[k].m_gradx[z][j];
-        dPart[k].m_gradx[i][j] *= a_dt;
+          // dPart[k].m_gradx[i][j] += G_k[i][z] * a_state.m_particles[k].m_gradx[z][j];
+          dPart[k].m_gradx[i][j] += (a_dt * G_k[i][z]) * combined[z][j];
+        // dPart[k].m_gradx[i][j] *= a_dt;
       }
     }
+    print_matrix_here(dPart[k].m_gradx);
   }
   // end equation 62, rhs
 
