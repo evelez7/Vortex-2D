@@ -24,6 +24,7 @@ array<array<double, DIM>, DIM> example = {
     {{-1., 0.}}
   }
 };
+
 array<array<double, DIM>, DIM> real_solution(const double x)
 {
   array<array<double, DIM>, DIM> real;
@@ -37,15 +38,18 @@ SingleParticleVelocity::SingleParticleVelocity(){};
 
 void SingleParticleVelocity::operator()(DX &a_shift, double a_time, double a_dt, Particle &a_particle)
 {
+  array<array<double, DIM>, DIM> combined;
+  for (int i=0; i<DIM; ++i)
+    for (int j=0; j<DIM; ++j)
+      combined[i][j] = a_shift.m_gradx[i][j] + a_particle.m_gradx[i][j];
+
   for (int i=0; i<DIM; ++i)
   {
     for (int j=0; j<DIM; ++j)
     {
       a_shift.m_gradx[i][j]=0;
       for (int k=0; k<DIM; ++k)
-        a_shift.m_gradx[i][j] += real_solution(a_time)[i][k] * a_particle.m_gradx[k][j];
-        // a_shift.m_gradx[i][j] += real_solution(a_dt)[i][k] * a_particle.m_gradx[k][j];
-      a_shift.m_gradx[i][j] *= a_dt;
+        a_shift.m_gradx[i][j] += (a_dt * example[i][k]) * combined[k][j];
     }
   }
 }

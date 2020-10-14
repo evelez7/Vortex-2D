@@ -46,13 +46,6 @@ void RK4<X, F, dX>::advance(double& a_time, double& a_dt, X& a_state)
     m_f(m_k, a_time+a_dt, a_dt, a_state); // compute k4
     m_delta.increment(sixth, m_k);
     a_state.increment(m_delta);
-
-    // std::cout << "m_k in rk4" << std::endl;
-    // print_matrix_here(m_k.m_gradx);
-    // std::cout << "m_delta in rk4" << std::endl;
-    // print_matrix_here(m_delta.m_gradx);
-    // std::cout << "particle in rk4" << std::endl;
-    // print_matrix_here(a_state.m_gradx);
 }
 
 } //end Proto namespace

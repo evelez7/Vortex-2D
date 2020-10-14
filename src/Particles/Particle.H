@@ -49,7 +49,9 @@ public:
 
   inline void init(const Particle &a_state)
   {
-
+    for (int i=0; i<DIM; ++i)
+      for (int j=0; j<DIM; ++j)
+        m_gradx[i][j]=0;
   }
 };
 class Particle
