@@ -127,7 +127,6 @@ void ParticleVelocities::operator()
         // dPart[k].m_gradx[i][j] *= a_dt;
       }
     }
-    print_matrix_here(dPart[k].m_gradx);
   }
   // end equation 62, rhs
 
