@@ -42,7 +42,7 @@ void ParticleVelocities::operator()
 
   int N = a_state.m_box.high()[1];
 
-  const vector<Particle >& oldPart = a_state.m_particles;
+  vector<Particle >& oldPart = a_state.m_particles;
   vector<DX >& dPart = a_k.m_particles;
   // loop evaluates Psi, the field (rhs)
   for (int k = 0; k < a_state.m_particles.size(); k++)
@@ -122,11 +122,10 @@ void ParticleVelocities::operator()
         // extra loop for matrix multiplication
         dPart[k].m_gradx[i][j] = 0;
         for (int z = 0; z < DIM; ++z)
-          // dPart[k].m_gradx[i][j] += G_k[i][z] * a_state.m_particles[k].m_gradx[z][j];
           dPart[k].m_gradx[i][j] += (a_dt * G_k[i][z]) * combined[z][j];
-        // dPart[k].m_gradx[i][j] *= a_dt;
       }
     }
+    oldPart[k].G = G_k;
   }
   // end equation 62, rhs
 

@@ -49,6 +49,12 @@ public:
 class Particle
 {
 public:
+  array<array<double, DIM>, DIM> G {
+    {
+      {{0, 0}},
+      {{0, 0}}
+    }
+  };
   array<double, DIM> m_x;
   double strength;
   array<double, DIM> m_alpha;

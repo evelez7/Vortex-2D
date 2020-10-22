@@ -37,7 +37,7 @@ void PWrite(const char* a_filename, const ParticleSet* a_p)
     {
       return;
     }
-  vector<vector<double> > vars(8);
+  vector<vector<double> > vars(12);
   unsigned int size = a_p->m_particles.size();
   std::vector<double> x(3*size);
   vars[0] = std::vector<double>(size);
@@ -48,16 +48,24 @@ void PWrite(const char* a_filename, const ParticleSet* a_p)
   vars[5] = std::vector<double>(size);
   vars[6] = std::vector<double>(size);
   vars[7] = std::vector<double>(size);
+  vars[8] = std::vector<double>(size);
+  vars[9] = std::vector<double>(size);
+  vars[10] = std::vector<double>(size);
+  vars[11] = std::vector<double>(size);
 
   for(unsigned int i=0; i<size; i++)
-    {
+   {
       const Particle& p = a_p->m_particles[i];
       // equation 30
       auto A_t_A = multiply_matrices(get_transpose(p.m_gradx), p.m_gradx); // the symmetric and positive definite matrix
       //equation 30-32
       auto eigenvalues = get_sym_eigenvalues(A_t_A); // get the eigenvalues from the symmetric part of the polar decomp
       double eigen_product = eigenvalues[0] * eigenvalues[1];
-      auto grad_det = get_determinant(p.m_gradx);
+      auto grad_det = get_determinant(A_t_A);
+      auto eigenvectors = find_eigenvectors(A_t_A, eigenvalues);
+      // verify_eigenvalues(A_t_A, eigenvalues);
+      // verify_eigenvectors_verbose(A_t_A, eigenvectors, eigenvalues);
+      // verify_eigenvectors(A_t_A, eigenvectors, eigenvalues);
 
       double max_eigenvalue = -INFINITY;
       // find greatest eigenvalue from the decomp
@@ -73,6 +81,10 @@ void PWrite(const char* a_filename, const ParticleSet* a_p)
       vars[5][i] = grad_det;
       vars[6][i] = eigenvalues[0];
       vars[7][i] = eigenvalues[1];
+      vars[8][i] = p.G[0][0];
+      vars[9][i] = p.G[0][1];
+      vars[10][i] = p.G[1][0];
+      vars[11][i] = p.G[1][1];
       x[i*3] = p.m_x[0];
       x[i*3+1] = p.m_x[1];
 #if DIM==3
@@ -81,7 +93,7 @@ void PWrite(const char* a_filename, const ParticleSet* a_p)
       x[i*3+2] = 0.0;
 #endif
     }
-  double* varPtr[8];
+  double* varPtr[12];
   varPtr[0] = &vars[0][0];
   varPtr[1] = &vars[1][0];
   varPtr[2] = &vars[2][0];
@@ -90,13 +102,20 @@ void PWrite(const char* a_filename, const ParticleSet* a_p)
   varPtr[5] = &vars[5][0];
   varPtr[6] = &vars[6][0];
   varPtr[7] = &vars[7][0];
-  int vardim[8] = {1,1,1,1,1,1,1,1};
-  const char* const varnames[] = {"strength","alpha1","alpha2","max_eigenvalue", "eigen_product", "grad_det", "eigen_1", "eigen_2"};
+  varPtr[8] = &vars[8][0];
+  varPtr[9] = &vars[9][0];
+  varPtr[10] = &vars[10][0];
+  varPtr[11] = &vars[11][0];
+  int vardim[12] = {1,1,1,1,1,1,1,1,1,1,1,1};
+  const char* const varnames[] = {"strength","alpha1","alpha2","max_eigenvalue", "eigen_product", "grad_det", "eigen1", "eigen2", "G_00","G_01","G_10","G_11"};
 
   write_point_mesh(a_filename, size,
-		   &(x[0]), 8, vardim,
+		   &(x[0]), 12, vardim,
                    varnames, varPtr);
+
+  // with G a memmber of particle, write
 }
+
 inline void write_point_mesh(const char* filename, int npts, double *pts,
                       int nvars, int *vardim, const char * const *varnames,
                       double **vars)
@@ -135,3 +154,4 @@ inline void write_point_mesh(const char* filename, int npts, double *pts,
 
     vtk_close_file(fp,numInColumn);
 }
+
