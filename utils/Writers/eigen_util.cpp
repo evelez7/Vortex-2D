@@ -166,18 +166,20 @@ void verify_eigenvectors_verbose(const array<array<double, DIM>, DIM>& matrix, c
   print_matrix(matrix);
   for (int i=0; i<DIM; ++i)
   {
+      cout << "EIGENVALUE " << i << ": " << eigenvalues[i] <<  endl;
       auto rhs = multiply_vector_by_scalar(eigenvectors[i], eigenvalues[i]);
       auto lhs = multiply_matrix_by_vector(matrix, eigenvectors[i]);
-      cout << "RHS: A times eigenvalue " << eigenvalues[i] << endl;
+      cout << "LHS" << endl << "A * " << eigenvalues[i] << endl << "[";
       for (auto elem : lhs)
         cout << elem << " ";
-      cout << endl << "LHS: eigen vector: ";
+      cout << "]" << endl;
+      cout << "RHS" << endl <<  "eigenvector: [";
       for (auto elem : eigenvectors[i])
         cout << elem << " ";
-      cout << " times eigenvalue: " << eigenvalues[i] << endl;
+      cout << "] * " << eigenvalues[i] << endl << "[";
       for (auto elem : rhs)
         cout << elem << " ";
-      cout << endl << endl;;
+      cout << "]" << endl << endl;
   }
   cout << endl;
 }
@@ -249,7 +251,7 @@ array<double, DIM> jacobi(const array<array<double, DIM>, DIM>& A, const array<d
 }
 
 // method that prepares matrix to send to jacobi iterative method
-array<array<double, DIM>, DIM> find_eigenvectors(const array<array<double, DIM>, DIM>& matrix, const array<double, DIM>& eigen_values)
+array<array<double, DIM>, DIM> find_eigenvectors_iteratively(const array<array<double, DIM>, DIM>& matrix, const array<double, DIM>& eigen_values)
 {
   array<array<double, DIM>, DIM> eigen_vectors;
   int count = 0;
@@ -275,6 +277,28 @@ array<array<double, DIM>, DIM> find_eigenvectors(const array<array<double, DIM>,
   return eigen_vectors;
 }
 
+array<array<double, DIM>, DIM> find_eigenvectors(const array<array<double, DIM>, DIM> &A, const array<double, DIM> &eigenvalues)
+{
+  // take the special case that we have a 2x2 matrix
+  array<array<double, DIM>, DIM> eigenvectors;
+  for (int i=0; i<DIM; ++i)
+  {
+    if (A[0][0] - eigenvalues[i] <= 1e-4 && A[0][1] <= 1e-4)
+    {
+      eigenvectors[i][0] = A[1][1] - eigenvalues[i];
+      eigenvectors[i][1] = -A[1][0];
+    } else
+    {
+      eigenvectors[i][0] = -A[0][1];
+      eigenvectors[i][1] = A[0][0] - eigenvalues[i];
+    }
+    double eigenvector_mag = sqrt(pow(eigenvectors[i][0], 2) + pow(eigenvectors[i][1], 2));
+    eigenvectors[i][0] /= eigenvector_mag;
+    eigenvectors[i][1] /= eigenvector_mag;
+  }
+  return eigenvectors;
+}
+
 // equation 30-32
 // returns the square root of the eigenvalues of the symmetric matrix R of the polar decomposition of the gradient
 array<double, DIM> get_sym_eigenvalues(const array<array<double, DIM>, DIM>& matrix)
@@ -290,6 +314,15 @@ array<double, DIM> get_sym_eigenvalues(const array<array<double, DIM>, DIM>& mat
   // equation 32
   for (int i=0; i<DIM; ++i)
     eigen_diag[i] = sqrt(roots[i]);
+    // eigen_diag[i] = roots[i];
 
   return eigen_diag;
+}
+
+double get_magnitude(const array<double, DIM> &vec)
+{
+  double sum=0;
+  for (auto elem : vec)
+    sum += pow(elem, 2);
+  return sqrt(sum);
 }
