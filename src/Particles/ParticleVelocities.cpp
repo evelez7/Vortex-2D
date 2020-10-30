@@ -95,6 +95,7 @@ void ParticleVelocities::operator()
         auto current_point = *it;
         array<int, DIM> index = {i, j};
         double val = G_deriv(index, current_point, a_state.m_dx, rhs);
+        // double val = G_deriv_original(index, current_point, a_state.m_dx, rhs);
         G_i_data[i][j](current_point) = val;
       }
     }
@@ -125,7 +126,7 @@ void ParticleVelocities::operator()
           dPart[k].m_gradx[i][j] += (a_dt * G_k[i][z]) * combined[z][j];
       }
     }
-    oldPart[k].G = G_k;
+    a_state.m_particles[k].G = G_k;
   }
   // end equation 62, rhs
 
@@ -167,26 +168,23 @@ void ParticleVelocities::operator()
 double G_deriv(const array<int, DIM>& index, const Point& current_point, const double& m_dx, const BoxData<double>& rhs)
 {
 
-        // determine which derivative to calculate based on the current iterations
-        double val;
-        int i = index[0]; int j = index[1];
-        if (i == 0 && j == 0)
-        {
+  // determine which derivative to calculate based on the current iterations
+  double val;
+  int i = index[0]; int j = index[1];
+  if (i == 0 && j == 0)
+  {
+    val = -second_diff_xy(m_dx, current_point, rhs);
+  }
+  else if ((i == 0 && j == 1) || (i==1 && j==0))
+  {
+    val = 0.5 * (second_diff(0, m_dx, current_point, rhs) - second_diff(1, m_dx, current_point, rhs));
+  }
+  else if (i == 1 && j == 1)
+  {
+    val = second_diff_xy(m_dx, current_point, rhs);
+  }
 
-          val = -second_diff_xy(m_dx, current_point, rhs);
-        }
-        else if ((i == 0 && j == 1) || (i==1 && j==0))
-        {
-
-          val = 0.5 * (second_diff(0, m_dx, current_point, rhs) - second_diff(1, m_dx, current_point, rhs));
-        }
-        else if (i == 1 && j == 1)
-        {
-
-          val = second_diff_xy(m_dx, current_point, rhs);
-        }
-
-        return val;
+  return val;
 }
 
 double G_deriv_original(const array<int, DIM>& index, const Point& current_point,  const double& m_dx, const BoxData<double>& rhs)
@@ -259,4 +257,12 @@ void print_matrix_here(const array<array<double, DIM>, DIM>& matrix)
     cout << endl;
   }
   cout << endl;
+}
+
+void check_G(const array<array<double, DIM>, DIM> &G)
+{
+  if (G[0][1] != G[1][0])
+  {
+    cout << "G[0][1] = " << G[0][1] << "  G[1][0] = " << G[1][0] << endl;
+  }
 }

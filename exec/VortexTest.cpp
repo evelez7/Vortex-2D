@@ -3,6 +3,8 @@
 #include <cmath>
 #include <vector>
 #include <string>
+#include <memory>
+#include <array>
 #include "Proto_Point.H"
 #include "Proto_Box.H"
 #include "Proto_BoxData.H"
@@ -14,6 +16,64 @@
 #include "ParticleWriter.H"
 #include "Proto_RK4.H"
 using namespace std;
+
+void GWrite(ParticleSet &a_p, int fileCount)
+{
+  // WRITE ALL INDICES TO ONE BOX
+  BoxData<double, 4> G_box(a_p.m_box);
+  for (int i=0; i<a_p.m_particles.size(); ++i)
+  {
+    Point particle_position(a_p.m_particles[i].m_x[0], a_p.m_particles[i].m_x[1]);
+    for (int j=0; j<4; ++j)
+    {
+      switch(j)
+      {
+        case 0:
+          G_box(particle_position, j) = a_p.m_particles[i].G[0][0];
+          break;
+        case 1:
+          G_box(particle_position, j) = a_p.m_particles[i].G[0][1];
+          break;
+        case 2:
+          G_box(particle_position, j) = a_p.m_particles[i].G[1][0];
+          break;
+        case 3:
+          G_box(particle_position, j) = a_p.m_particles[i].G[1][1];
+          break;
+        default:
+          break;
+      }
+    }
+  }
+  string filename = string("G");
+  WriteData(G_box, fileCount, 1, filename, filename);
+  // END WRITE ALL INDICES TO ONE BOX
+
+  // WRITE ALL INDICES AS SEPARATE BOXES
+  BoxData<double> g_1(a_p.m_box);
+  BoxData<double> g_2(a_p.m_box);
+  BoxData<double> g_3(a_p.m_box);
+  BoxData<double> g_4(a_p.m_box);
+  for (int i=0; i<a_p.m_particles.size(); ++i)
+  {
+    Point part_pos(a_p.m_particles[i].m_x[0], a_p.m_particles[i].m_x[1]);
+    g_1(part_pos) = a_p.m_particles[i].G[0][0];
+    g_2(part_pos) = a_p.m_particles[i].G[0][1];
+    g_3(part_pos) = a_p.m_particles[i].G[1][0];
+    g_4(part_pos) = a_p.m_particles[i].G[1][1];
+  }
+
+  string g1 = string("G1_single");
+  string g2 = string("G2_single");
+  string g3 = string("G3_single");
+  string g4 = string("G_single4");
+  WriteData(g_1, fileCount, 1, g1, g1);
+  WriteData(g_2, fileCount, 1, g2, g2);
+  WriteData(g_3, fileCount, 1, g3, g3);
+  WriteData(g_4, fileCount, 1, g4, g4);
+  // END WRITE ALL INDICES AS SEPARATE BOXES
+}
+
 void outField(ParticleSet& a_state)
 {
   BoxData<double> field(a_state.m_box);
@@ -48,8 +108,8 @@ void outField(ParticleSet& a_state)
     }
   a_state.m_hockney.convolve(field);
   WriteBoxData("field",field);
-
 }
+
 void outVort(ParticleSet& p, int a_coarsenFactor,unsigned int a_nstep)
 {
   int coarsenFactor = a_coarsenFactor;
@@ -207,6 +267,7 @@ else if (test == 3)
 #if ANIMATION
       outVort(p,pcfactor,i);
       PWrite(&p);
+      GWrite(p, i);
 #endif
       if (time >= timeStop)
         {
