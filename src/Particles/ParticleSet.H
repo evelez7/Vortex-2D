@@ -42,6 +42,8 @@ public:
   double m_dx;
   double m_hp;
   Box m_box;
+  int RK_count = 0;
+  int file_count = 0;
   array<double,DIM> m_lowCorner;
   Hockney m_hockney;
   void increment(const ParticleShift& a_shift);

@@ -15,12 +15,26 @@
 
 using namespace std;
 using namespace Proto;
-
 double second_diff(const int &, const double &, Point, const BoxData<double> &);
 double second_diff_xy(const double &, Point, const BoxData<double> &);
 double G_deriv(const array<int, DIM>&, const Point&, const double&, const BoxData<double>&);
 double G_deriv_original(const array<int, DIM>&, const Point&, const double&, const BoxData<double>&);
 void print_matrix_here(const array<array<double, DIM>, DIM>&);
+
+void GWrite(BoxData<double> G[DIM][DIM], int fileCount)
+{
+  // WRITE ALL INDICES AS SEPARATE BOXES
+
+  string g1 = string("G1_finite");
+  string g2 = string("G2_finite");
+  string g3 = string("G3_finite");
+  string g4 = string("G4_finite");
+  WriteData(G[0][0], fileCount, 1, g1, g1);
+  WriteData(G[0][1], fileCount, 1, g2, g2);
+  WriteData(G[1][0], fileCount, 1, g3, g3);
+  WriteData(G[1][1], fileCount, 1, g4, g4);
+  // END WRITE ALL INDICES AS SEPARATE BOXES`
+}
 
 ParticleVelocities:: ParticleVelocities(){};
 void ParticleVelocities::operator()
@@ -39,6 +53,7 @@ void ParticleVelocities::operator()
   Point e1 = Point::Basis(1);
   rhs.setVal(0.);
   PR_START(t1);
+  int fileCount = 0;
 
   int N = a_state.m_box.high()[1];
 
@@ -101,11 +116,13 @@ void ParticleVelocities::operator()
     }
   }
 
+  array<array<double, DIM>, DIM> G_k;
+
   for (int k = 0; k < a_state.m_particles.size(); ++k)
   {
     // equation 70, pass values to interpolation
     auto omega_k = a_state.m_particles[k].strength * pow(a_state.m_dx / a_state.m_hp, 2.0);
-    auto G_k = interpolate_array(G_i_data, a_state.m_particles[k], a_state.m_dx, omega_k);
+    G_k = interpolate_array(G_i_data, a_state.m_particles[k], a_state.m_dx, omega_k);
     // equation 70, add omega_k
     G_k[0][1] += 0.5 * omega_k;
     G_k[1][0] += 0.5 *(-omega_k);
@@ -127,6 +144,12 @@ void ParticleVelocities::operator()
       }
     }
     a_state.m_particles[k].G = G_k;
+  }
+
+  if (a_state.RK_count == 0)
+  {
+    GWrite(G_i_data, a_state.file_count);
+    a_state.file_count++;
   }
   // end equation 62, rhs
 
