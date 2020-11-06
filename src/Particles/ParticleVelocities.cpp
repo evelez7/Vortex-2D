@@ -85,7 +85,7 @@ void ParticleVelocities::operator()
   a_state.m_hockney.convolve(rhs);
   PR_STOP(t2);
   PR_START(t3);
-  Box gradBox = a_state.m_box.grow(-1);
+  Box gradBox = a_state.m_box.grow(-2);
   BoxData<double > field[DIM]; // velocity field on the grid
   for (int l=0 ; l < DIM; l++)
 	{
@@ -109,11 +109,17 @@ void ParticleVelocities::operator()
       {
         auto current_point = *it;
         array<int, DIM> index = {i, j};
-        double val = G_deriv(index, current_point, a_state.m_dx, rhs);
+        double val = G_deriv_original(index, current_point, a_state.m_dx, rhs);
         // double val = G_deriv_original(index, current_point, a_state.m_dx, rhs);
         G_i_data[i][j](current_point) = val;
       }
     }
+  }
+
+  if (a_state.RK_count == 0)
+  {
+    GWrite(G_i_data, a_state.file_count);
+    a_state.file_count++;
   }
 
   array<array<double, DIM>, DIM> G_k;
@@ -144,12 +150,6 @@ void ParticleVelocities::operator()
       }
     }
     a_state.m_particles[k].G = G_k;
-  }
-
-  if (a_state.RK_count == 0)
-  {
-    GWrite(G_i_data, a_state.file_count);
-    a_state.file_count++;
   }
   // end equation 62, rhs
 
@@ -261,7 +261,7 @@ double second_diff(const int &axis, const double &dx, const Point i, const BoxDa
  * The finite difference of a partial derivative with respect to x then y
  */
 double second_diff_xy(const double &dx, Point i, const BoxData<double> &function_data) {
-	Point first(i[0] + 1, i[0] +1);
+	Point first(i[0] + 1, i[1] +1);
   Point second(i[0] + 1, i[1] - 1);
   Point third(i[0] - 1, i[1] + 1);
   Point fourth(i[0] - 1, i[1] - 1);
