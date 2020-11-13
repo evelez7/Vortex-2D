@@ -21,6 +21,8 @@ double G_deriv(const array<int, DIM>&, const Point&, const double&, const BoxDat
 double G_deriv_original(const array<int, DIM>&, const Point&, const double&, const BoxData<double>&);
 void print_matrix_here(const array<array<double, DIM>, DIM>&);
 
+bool add_vorticity = false;
+
 void GWrite(BoxData<double> G[DIM][DIM], int fileCount)
 {
   // WRITE ALL INDICES AS SEPARATE BOXES
@@ -109,8 +111,9 @@ void ParticleVelocities::operator()
       {
         auto current_point = *it;
         array<int, DIM> index = {i, j};
+        // Uncomment lines here to switch schemes to compute the finite difference matrix G
         double val = G_deriv_original(index, current_point, a_state.m_dx, rhs);
-        // double val = G_deriv_original(index, current_point, a_state.m_dx, rhs);
+        // double val = G_deriv(index, current_point, a_state.m_dx, rhs);
         G_i_data[i][j](current_point) = val;
       }
     }
@@ -129,9 +132,12 @@ void ParticleVelocities::operator()
     // equation 70, pass values to interpolation
     auto omega_k = a_state.m_particles[k].strength * pow(a_state.m_dx / a_state.m_hp, 2.0);
     G_k = interpolate_array(G_i_data, a_state.m_particles[k], a_state.m_dx, omega_k);
-    // equation 70, add omega_k
-    G_k[0][1] += 0.5 * omega_k;
-    G_k[1][0] += 0.5 *(-omega_k);
+    if (add_vorticity)
+    {
+      // equation 70, add omega_k
+      G_k[0][1] += 0.5 * omega_k;
+      G_k[1][0] += 0.5 *(-omega_k);
+    }
 
     array<array<double, DIM>, DIM> combined;
     for (int i=0;i<DIM;++i)
@@ -194,6 +200,7 @@ double G_deriv(const array<int, DIM>& index, const Point& current_point, const d
   // determine which derivative to calculate based on the current iterations
   double val;
   int i = index[0]; int j = index[1];
+  add_vorticity = true;
   if (i == 0 && j == 0)
   {
     val = -second_diff_xy(m_dx, current_point, rhs);
@@ -214,6 +221,7 @@ double G_deriv_original(const array<int, DIM>& index, const Point& current_point
 {
   int i = index[0]; int j = index[1];
   double val;
+  add_vorticity = false;
   if (i == 0 && j == 0)
   {
     val = -second_diff_xy(m_dx, current_point, rhs);
@@ -256,7 +264,6 @@ double second_diff(const int &axis, const double &dx, const Point i, const BoxDa
   return (sum / pow(dx, 2.0));
 }
 
-
 /**
  * The finite difference of a partial derivative with respect to x then y
  */
@@ -266,7 +273,7 @@ double second_diff_xy(const double &dx, Point i, const BoxData<double> &function
   Point third(i[0] - 1, i[1] + 1);
   Point fourth(i[0] - 1, i[1] - 1);
   double sum = function_data(first) - function_data(second) - function_data(third) + function_data(fourth);
-  return sum / (4 * pow(dx, 2.0));
+  return sum / (4. * pow(dx, 2.));
 }
 
 void print_matrix_here(const array<array<double, DIM>, DIM>& matrix)
@@ -280,12 +287,4 @@ void print_matrix_here(const array<array<double, DIM>, DIM>& matrix)
     cout << endl;
   }
   cout << endl;
-}
-
-void check_G(const array<array<double, DIM>, DIM> &G)
-{
-  if (G[0][1] != G[1][0])
-  {
-    cout << "G[0][1] = " << G[0][1] << "  G[1][0] = " << G[1][0] << endl;
-  }
 }
