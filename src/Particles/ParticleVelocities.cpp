@@ -2,6 +2,7 @@
 #include <cassert>
 #include <cmath>
 #include <vector>
+#include <fstream>
 #include "Hockney.H"
 #include "ParticleSet.H"
 #include "ParticleVelocities.H"
@@ -20,13 +21,12 @@ double second_diff_xy(const double &, Point, const BoxData<double> &);
 double G_deriv(const array<int, DIM>&, const Point&, const double&, const BoxData<double>&);
 double G_deriv_original(const array<int, DIM>&, const Point&, const double&, const BoxData<double>&);
 void print_matrix_here(const array<array<double, DIM>, DIM>&);
+void write_curve_file(const BoxData<double> [DIM][DIM], const int&, const double&, const double&, const double&);
 
 bool add_vorticity = false;
 
 void GWrite(BoxData<double> G[DIM][DIM], int fileCount)
 {
-  // WRITE ALL INDICES AS SEPARATE BOXES
-
   string g1 = string("G1_finite");
   string g2 = string("G2_finite");
   string g3 = string("G3_finite");
@@ -121,6 +121,7 @@ void ParticleVelocities::operator()
 
   if (a_state.RK_count == 0)
   {
+    write_curve_file(G_i_data, a_state.m_particles.size(), a_time, a_state.m_hp, a_state.m_dx);
     GWrite(G_i_data, a_state.file_count);
     a_state.file_count++;
   }
@@ -196,7 +197,6 @@ void ParticleVelocities::operator()
 
 double G_deriv(const array<int, DIM>& index, const Point& current_point, const double& m_dx, const BoxData<double>& rhs)
 {
-
   // determine which derivative to calculate based on the current iterations
   double val;
   int i = index[0]; int j = index[1];
@@ -287,4 +287,62 @@ void print_matrix_here(const array<array<double, DIM>, DIM>& matrix)
     cout << endl;
   }
   cout << endl;
+}
+
+void write_curve_file(const BoxData<double> G_data[DIM][DIM], const int& num_of_particles, const double& time, const double& hp, const double& h)
+{
+  double log2_result = log2(num_of_particles);
+  int count = 0;
+  array<double, 4> maxes;
+  array<double, 4> mins;
+  for (int i=0; i<DIM; ++i)
+  {
+    for (int j=0; j<DIM; ++j)
+    {
+      mins[count] = G_data[i][j].min();
+      maxes[count] = G_data[i][j].max();
+      count++;
+    }
+  }
+  for (int i=0; i<4; ++i)
+  {
+    string G_ident;
+    switch(i)
+    {
+      case 0:
+        G_ident = "G00_";
+        break;
+      case 1:
+        G_ident = "G01_";
+        break;
+      case 2:
+        G_ident = "G10_";
+        break;
+      case 3:
+        G_ident = "G11_";
+        break;
+      default:
+        break;
+    }
+    string max_file_name = "max_";
+    string min_file_name = "min_";
+    max_file_name.append(G_ident);
+    min_file_name.append(G_ident);
+    max_file_name.append(to_string(num_of_particles));
+    min_file_name.append(to_string(num_of_particles));
+    max_file_name.append("_");
+    min_file_name.append("_");
+    max_file_name.append(to_string(hp));
+    min_file_name.append(to_string(hp));
+    max_file_name.append("_");
+    min_file_name.append("_");
+    max_file_name.append(to_string(h));
+    min_file_name.append(to_string(h));
+    max_file_name.append(".curve");
+    min_file_name.append(".curve");
+    ofstream max_curve_file(max_file_name, std::ios_base::app);
+    ofstream min_curve_file(min_file_name, std::ios_base::app);
+    max_curve_file << time << " " << maxes[i] << endl;
+    min_curve_file << time << " " << mins[i] << endl;
+  }
 }
