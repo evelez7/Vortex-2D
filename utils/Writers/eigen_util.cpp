@@ -59,7 +59,7 @@ array<double, DIM> multiply_matrix_by_vector(const array<array<double, DIM>, DIM
 array<array<double, DIM>, DIM> get_inverse(const array<array<double, DIM>, DIM>& matrix)
 {
   array<array<double, DIM>, DIM> matrix_inverse;
-  double determinant = 1/((matrix[0][0]*matrix[1][1]) - (matrix[0][1]*matrix[1][0]));
+  double determinant = 1./((matrix[0][0]*matrix[1][1]) - (matrix[0][1]*matrix[1][0]));
   for (int i=0; i<DIM; ++i)
   {
     for (int j=0; j<DIM; ++j)
@@ -95,15 +95,16 @@ array<double, DIM> get_roots(const array<double, 3>& characteristic_polynomial)
   {
     roots[0] = (-b + sqrt(discriminant))/(2*a);
     roots[1] = (-b - sqrt(discriminant))/(2*a);
-  } else if (discriminant == 0)
+  } else if (discriminant == 0 || discriminant < 1e-10)
   {
     roots[0] = -b/(2.*a);
     roots[1]=roots[0];
-  } else if (discriminant < 0)
-  {
-    cout << "Imaginary case" << endl;
-    exit(-1);
   }
+  // if (discriminant < 1e-10)
+  // {
+  //   cout << "root 1: " << roots[0] << endl;
+  //   cout << "root 2: " << roots[1] << endl;
+  // }
   return roots;
 }
 
@@ -217,85 +218,36 @@ void verify_eigenvectors(const array<array<double, DIM>, DIM>& matrix, const arr
   cout << endl;
 }
 
-// iterative method to find eigenvectors
-array<double, DIM> jacobi(const array<array<double, DIM>, DIM>& A, const array<double, DIM>& b, array<double, DIM>& x_guess, const double& error_max)
-{
-  array<double, DIM> x_estimates;
-  array<double, DIM> error_vals;
-  bool end_loop = false;
-  do
-  {
-    for (int i=0; i<DIM; ++i)
-    {
-      double rhs_sum = 0;
-      for (int j=0; j<DIM; ++j)
-        if (j != i)
-          rhs_sum += A.at(i).at(j)*x_guess.at(j);
-      x_estimates.at(i) = (b.at(i) - rhs_sum) / A.at(i).at(i);
-    }
-
-    for (int i=0; i<error_vals.size(); ++i)
-      error_vals[i] = fabs(x_guess.at(i) - x_estimates.at(i));
-
-    for (int i=0; i<x_guess.size(); ++i)
-      x_guess.at(i) = x_estimates.at(i);
-
-    for (auto val : error_vals)
-      if (val < error_max)
-      {
-        end_loop = true;
-        break;
-      }
-  } while (!end_loop);
-  return x_estimates;
-}
-
-// method that prepares matrix to send to jacobi iterative method
-array<array<double, DIM>, DIM> find_eigenvectors_iteratively(const array<array<double, DIM>, DIM>& matrix, const array<double, DIM>& eigen_values)
-{
-  array<array<double, DIM>, DIM> eigen_vectors;
-  int count = 0;
-  for (auto val : eigen_values)
-  {
-    array<array<double, DIM>, DIM> temp_matrix;
-    for (int i=0; i<DIM; ++i)
-      for (int j=0; j<DIM; ++j)
-        if (i == j)
-          temp_matrix[i][j] = matrix[i][j] - val;
-        else
-          temp_matrix[i][j] = matrix[i][j];
-
-    array<double, DIM> guess;
-    for (int i=0; i<DIM; ++i)
-      guess[i] = 1;
-    array<double, DIM> b;
-    for (int i=0; i < DIM; ++i)
-      b[i] = 0;
-    eigen_vectors[count] = jacobi(temp_matrix, b, guess, 6);
-    count++;
-  }
-  return eigen_vectors;
-}
-
 array<array<double, DIM>, DIM> find_eigenvectors(const array<array<double, DIM>, DIM> &A, const array<double, DIM> &eigenvalues)
 {
   // take the special case that we have a 2x2 matrix
   array<array<double, DIM>, DIM> eigenvectors;
-  for (int i=0; i<DIM; ++i)
+
+  double a = A[0][0];
+  double b = A[0][1];
+  double c = A[1][0];
+  double d = A[1][1];
+
+  if ((c == 0 || c < 1e-5) && (b == 0 || b < 1e-5))
   {
-    if (A[0][0] - eigenvalues[i] <= 1e-4 && A[0][1] <= 1e-4)
-    {
-      eigenvectors[i][0] = A[1][1] - eigenvalues[i];
-      eigenvectors[i][1] = -A[1][0];
-    } else
-    {
-      eigenvectors[i][0] = -A[0][1];
-      eigenvectors[i][1] = A[0][0] - eigenvalues[i];
-    }
-    double eigenvector_mag = sqrt(pow(eigenvectors[i][0], 2) + pow(eigenvectors[i][1], 2));
-    eigenvectors[i][0] /= eigenvector_mag;
-    eigenvectors[i][1] /= eigenvector_mag;
+    eigenvectors[0][0] = 1;
+    eigenvectors[0][1] = 0;
+    eigenvectors[1][0] = 0;
+    eigenvectors[1][1] = 1;
+  } else if (c != 0 || c > 1e-5)
+  {
+    eigenvectors[0][0] = eigenvalues[0] - d;
+    eigenvectors[0][1] = c;
+    eigenvectors[1][0] = eigenvalues[1] - d;
+    eigenvectors[1][1] = c;
+  } else if (b != 0 || b > 1e-5)
+  {
+    eigenvectors[0][0] = b;
+    eigenvectors[0][1] = eigenvalues[0] - a;
+    eigenvectors[1][0] = b;
+    eigenvectors[1][1] = eigenvalues[1] - a;
   }
+
   return eigenvectors;
 }
 
@@ -317,6 +269,35 @@ array<double, DIM> get_sym_eigenvalues(const array<array<double, DIM>, DIM>& mat
     // eigen_diag[i] = roots[i];
 
   return eigen_diag;
+}
+
+array<double, DIM> get_eigenvalues(const array<array<double, DIM>, DIM>& matrix)
+{
+
+  // equation 31
+  auto poly = get_characteristic_polynomial(matrix);
+  auto roots = get_roots(poly);
+
+  // visual verification where the determinants should be close to 0
+  // verify_eigen_values(A_t_A, roots);
+
+  array<double, DIM> eigen_diag;
+  // equation 32
+  for (int i=0; i<DIM; ++i)
+    eigen_diag[i] = roots[i];
+
+  return eigen_diag;
+}
+
+array<double, DIM> get_eigenvalues_trace(const array<array<double, DIM>, DIM>& matrix)
+{
+  double trace = matrix[0][0] + matrix[1][1];
+  double determinant = (matrix[0][0] * matrix[1][1]) - (matrix[0][1] * matrix[1][0]);
+  array<double, DIM> eigenvalues;
+  eigenvalues[0] = (trace/2) + sqrt( (pow(trace, 2.)/4) - determinant);
+  eigenvalues[1] = (trace/2) - sqrt( (pow(trace, 2.)/4) - determinant);
+
+  return eigenvalues;
 }
 
 double get_magnitude(const array<double, DIM> &vec)

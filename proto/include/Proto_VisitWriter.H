@@ -40,11 +40,11 @@
 * DAMAGE.
 *
 *****************************************************************************/
- 
+
 /* ************************************************************************* //
 //                              visit_writer.h                               //
 // ************************************************************************* */
- 
+
 /*
 // This file contains function prototypes for writing out point meshes,
 // unstructured meshes, rectilinear meshes, regular meshes, and
@@ -72,7 +72,7 @@
 #ifndef VISIT_USE_BINARY
 #define VISIT_USE_BINARY 1
 #endif
- 
+
 inline FILE * vtk_open_file(const char* a_filename);
 inline void vtk_close_file(FILE* fp, int& numInColumn);
 
@@ -101,7 +101,7 @@ inline void vtk_close_file(FILE* fp, int& numInColumn);
 //  Creation:   September 2, 2004
 //
 // ***************************************************************************/
- 
+
 inline void write_point_mesh(const char *filename, int npts,
                       double *pts, int nvars, int *vardim,
                       const char * const *varnames, double **vars);
@@ -110,8 +110,8 @@ void write_point_mesh(FILE*  file, int useBinary, int npts,
                       double *pts, int nvars, int *vardim,
                       const char * const *varnames, double **vars);
 */
- 
- 
+
+
 /* ****************************************************************************
 //  Function: write_unstructured_mesh
 //
@@ -178,7 +178,7 @@ void write_point_mesh(FILE*  file, int useBinary, int npts,
 //  Creation:   September 2, 2004
 //
 // ***************************************************************************/
- 
+
 #define VISIT_VERTEX         1
 #define VISIT_LINE           3
 #define VISIT_TRIANGLE       5
@@ -187,14 +187,14 @@ void write_point_mesh(FILE*  file, int useBinary, int npts,
 #define VISIT_HEXAHEDRON    12
 #define VISIT_WEDGE         13
 #define VISIT_PYRAMID       14
- 
+
 inline void write_unstructured_mesh(const char *filename, int npts,
                              double *pts, int ncells, int *celltypes, int *conn,
                              int nvars, int *vardim, int *centering,
                              const char * const *varnames, double **vars);
- 
- 
- 
+
+
+
 /* ****************************************************************************
 //  Function: write_regular_mesh
 //
@@ -227,12 +227,12 @@ inline void write_unstructured_mesh(const char *filename, int npts,
 //  Creation:   September 2, 2004
 //
 // ***************************************************************************/
- 
+
 inline void write_regular_mesh(const char *filename, int *dims,
                         int nvars, int *vardim, int *centering,
                         const char * const *varnames, double **vars);
- 
- 
+
+
 /* ****************************************************************************
 //  Function: write_rectilinear_mesh
 //
@@ -271,7 +271,7 @@ inline void write_regular_mesh(const char *filename, int *dims,
 //  Creation:   September 2, 2004
 //
 // ***************************************************************************/
- 
+
 inline void write_rectilinear_mesh(const char *filename,
                             int *dims, double *x, double *y, double *z,
                             int nvars, int *vardim, int *centering,
@@ -283,9 +283,9 @@ void write_rectilinear_mesh(FILE*  file,   int useBinary,
                             int nvars, int *vardim, int *centering,
                             const char * const *varnames, double **vars);
 */
- 
- 
- 
+
+
+
 /* ****************************************************************************
 //  Function: write_curvilinear_mesh
 //
@@ -318,7 +318,7 @@ void write_rectilinear_mesh(FILE*  file,   int useBinary,
 //  Creation:   September 2, 2004
 //
 // ***************************************************************************/
- 
+
 inline void write_curvilinear_mesh(const char *filename,
                             int *dims, double *pts,
                             int nvars, int *vardim, int *centering,

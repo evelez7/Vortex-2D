@@ -4,12 +4,6 @@
 #include "w.h"
 #include "Proto_Point.H"
 
-// forward declarations
-double w_2_helper(double);
-double w_3_helper(double);
-double w_4_helper(double);
-double w_6_helper(double);
-// end forward declarations
 
 double W_2(double x) {
     auto abs_x = abs(x);

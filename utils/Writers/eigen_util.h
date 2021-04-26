@@ -24,7 +24,8 @@ void verify_eigenvectors_verbose(const array<array<double, DIM>, DIM>&, const ar
 void collect_eigenvector_errors(const array<array<double, DIM>, DIM>&, const array<array<double, DIM>, DIM>&, const array<double, DIM>&, shared_ptr<vector<double>>&);
 void verify_eigenvectors(const array<array<double, DIM>, DIM>&, const array<array<double, DIM>, DIM>&, const array<double, DIM>&);
 array<array<double, DIM>, DIM> find_eigenvectors(const array<array<double, DIM>, DIM>&, const array<double, DIM>&);
-array<array<double, DIM>, DIM> find_eigenvectors_iteratively(const array<array<double, DIM>, DIM>&, const array<double, DIM>&);
 array<double, DIM> get_sym_eigenvalues(const array<array<double, DIM>, DIM>&);
+array<double, DIM> get_eigenvalues(const array<array<double, DIM>, DIM>&);
+array<double, DIM> get_eigenvalues_trace(const array<array<double, DIM>, DIM>&);
 
 #endif

@@ -19,6 +19,5 @@ double W_6(double);
 
 double W(const Point&, const double&, double (*)(double));
 double W(const std::array<double, DIM>&, const double&, double (*)(double));
-
 std::string get_W_name(double (*)(double));
 #endif

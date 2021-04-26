@@ -52,6 +52,7 @@ void outField(ParticleSet& a_state)
   WriteBoxData("field",field);
 }
 
+// vorticity on the grid
 void outVort(ParticleSet& p, int a_coarsenFactor,unsigned int a_nstep)
 {
   int coarsenFactor = a_coarsenFactor;
@@ -65,15 +66,15 @@ void outVort(ParticleSet& p, int a_coarsenFactor,unsigned int a_nstep)
   Point e1 = Point::Basis(1);
   //
   outVort.setVal(0.);
-  for (int k = 0; k < p.m_particles.size(); k++)
+    for (int k = 0; k < p.m_particles.size(); k++)
     {
       for (int l = 0; l < DIM; l++)
-        {
-          double newpos = p.m_particles[k].m_x[l];
-          newpos -= .5*h;
-          ipos[l] = newpos/h;
-          xpos[l] = (newpos - ipos[l]*h)/h;
-        }
+      {
+        double newpos = p.m_particles[k].m_x[l];
+        newpos -= .5*h;
+        ipos[l] = newpos/h;
+        xpos[l] = (newpos - ipos[l]*h)/h;
+      }
       Point pt(ipos);
       assert(p.m_box.contains(pt));
       for (int l0=0; l0 < DIM;l0++)
@@ -88,6 +89,18 @@ void outVort(ParticleSet& p, int a_coarsenFactor,unsigned int a_nstep)
     }
   string filename = string("vorticity") ;
   WriteData(outVort,   a_nstep, h, filename,filename);
+  // Point middle(bx.high()[0]/2, bx.high()[1]/2);
+  // int radius = 5;
+  // double max = 0;
+  // for (int i=-radius; i<radius; ++i)
+  //   for (int j=-radius; j<radius; ++j)
+  //   {
+  //     Point current_point(middle[0] + i, middle[1] + j);
+  //     double error = outVort(current_point) - 1.;
+  //     if (error > max) max = error;
+  //   }
+
+  // cout << "MAX ERROR: " << max << endl;
 };
 int main(int argc, char* argv[])
 {
@@ -95,7 +108,7 @@ int main(int argc, char* argv[])
   unsigned int N;
   cout << "input log_2(number of grid points)" << endl;
   cin >> M;
-  int test = 4;
+  int test;
   cout << "input particle refinement factor" << endl;
   unsigned int cfactor;
   cin >> cfactor;
@@ -111,7 +124,12 @@ int main(int argc, char* argv[])
   int Np = 1./hp;
   hp = 1./Np;
   double delta = h;
-  int pcfactor = 4/cfactor;
+  cout << "enter coarsening factor" << endl;
+  int pcfactor;
+  // pcfactor = 4/cfactor;
+  cin >> pcfactor;
+  cout << "enter test case" << endl;
+  cin >> test;
   if (pcfactor < 1 ) pcfactor = 1;
   cout << "number of particles per cell = " << h*h/hp/hp << endl;
   shared_ptr<CutoffKernel> cutkptr =
@@ -153,7 +171,7 @@ else if (test == 3)
       particle2.m_x[1] = .75;
       particle2.strength = 1./h/h;
     }
-  else
+  else if (test == 4)
     {
       array<double,DIM> xp;
       for (int i = 0;i < Np;i++)
@@ -177,6 +195,59 @@ else if (test == 3)
                 }
             }
         }
+    } else if (test == 5)
+    {
+      // single body, test case 5
+      array<double,DIM> xp;
+      for (int i = 0;i < Np;i++)
+        {
+          xp[0] = i*hp;
+          for (int j = 0; j< Np; j++)
+            {
+              xp[1] = j*hp;
+              double dist = sqrt(pow(xp[0] - .5,2) + pow(xp[1] - .5,2));
+              if (dist < .25 )
+            // if (dist1 < .1125 )
+                {
+                  Particle part;
+                  part.m_x[0] = xp[0];
+                  part.m_x[1] = xp[1];
+                  double rmagsq = dist*dist;
+                  // part.strength = pow(1.-rmagsq*16, 7) * hp*hp/h/h;
+                  part.strength = 1*pow(hp, 2.)/h/h;
+                  part.m_alpha[0] = xp[0];
+                  part.m_alpha[1] = xp[1];
+                  p.m_particles.push_back(part);
+                }
+            }
+        }
+    } else
+    {
+    // differential shear, test case 6
+    double r0 = 0.25;
+
+    array<double, DIM> xp;
+    for (int i = 0; i < Np; ++i)
+    {
+      xp[0] = i*hp;
+      for (int j =0; j<Np; ++j)
+      {
+        xp[1] = j*hp;
+      double r = sqrt(pow(xp[0]-0.5, 2) + pow(xp[1]-0.5, 2));
+      if (r<r0)
+      {
+        Particle part;
+                  part.m_x[0] = xp[0];
+                  part.m_x[1] = xp[1];
+                  double rmagsq = r*r;
+                  // part.strength = pow(1.-rmagsq*16, 7) * hp*hp/h/h;
+                  part.strength = 5 * pow(1 - pow(r/r0, 2), 4)*pow(hp, 2.)/h/h;
+                  part.m_alpha[0] = xp[0];
+                  part.m_alpha[1] = xp[1];
+                  p.m_particles.push_back(part);
+      }
+    }
+    }
     }
   double dx = 1./N;
   cout << "number of particles = " << p.m_particles.size() << endl;

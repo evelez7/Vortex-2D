@@ -34,7 +34,7 @@ inline void WriteBoxData(const char*           a_filename,
     {
         origin[ii] = 0.0;
     }
-  
+
     WriteBoxData(a_filename, a_array, vars, origin, dx);
 }
 

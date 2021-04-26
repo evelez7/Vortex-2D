@@ -1,5 +1,6 @@
 #include "interpolate.h"
 #include "w.h"
+#include <math.h>
 #include <array>
 #include <cmath>
 #include <iterator>
@@ -8,11 +9,12 @@
 #include <array>
 #include <vector>
 #include <algorithm>
+#include <iostream>
 
 using namespace std;
 using namespace Proto;
 
-auto w_ptr = W_2;
+auto w_ptr = static_cast<double (*)(double)>(W_2);
 
 std::map<double (*)(double), std::tuple<int, int>> r_map = {
     {W_2, std::make_tuple(0, 1)},
@@ -85,11 +87,11 @@ array<array<double, DIM>, DIM> interpolate(const BoxData<double> G_i[DIM][DIM],
     }
   }
   // multidimensional interpolation algorithm
-  Point left_hand_corner(floor(x_k.m_alpha[0] / h_g), floor(x_k.m_alpha[1] / h_g));
+  Point left_hand_corner(floor(x_k.m_x[0] / h_g), floor(x_k.m_x[1] / h_g));
   auto grid_points = compute_points_to_consider(left_hand_corner);
   for (auto i_pos : grid_points) {
     Point x_bar(i_pos[0] * h_g, i_pos[1] * h_g);
-    Point z(x_k.m_alpha[0] - x_bar[0], x_k.m_alpha[1] - x_bar[1]);
+    Point z(x_bar[0] - x_k.m_x[0], x_bar[1] - x_k.m_x[1]);
     // w_ptr = W_2 function
     double W_value = W(z, h_g, w_ptr);
     // cout << "w_val: " << W_value << endl;
@@ -169,27 +171,30 @@ vector<array<double, DIM>> compute_points_to_consider(const array<double, DIM> &
 // m_dx is h_g
 array<array<double, DIM>, DIM> interpolate_array(const BoxData<double> G_i[DIM][DIM],
                                            const Particle &x_k,
-                                           const double &h_g,
-                                           const double &omega)
+                                           const double &h_g)
 {
   array<array<double, DIM>, DIM> G_k;
   for (int i=0; i<DIM; ++i)
   {
     for (int j=0; j<DIM;++j)
     {
-      G_k[i][j] = 0;
+      G_k[i][j] = 0.;
     }
   }
 
   // multidimensional interpolation algorithm
-  array<double, DIM> left_hand_corner = {floor(x_k.m_alpha[0] / h_g), floor(x_k.m_alpha[1] / h_g)};
+  array<double, DIM> left_hand_corner = {floor(x_k.m_x[0] / h_g), floor(x_k.m_x[1] / h_g)};
   auto grid_points = compute_points_to_consider(left_hand_corner);
+  // cout << "lhc: " << left_hand_corner[0] << "," << left_hand_corner[1] << endl;
   for (auto i_pos : grid_points) {
+    // cout << "i_pos: " << i_pos[0] << "," << i_pos[1] << endl;
     array<double, DIM> x_bar = {i_pos[0] * h_g, i_pos[1] * h_g};
     array<double, DIM> z = {x_k.m_x[0] - x_bar[0], x_k.m_x[1] - x_bar[1]};
+    // array<double, DIM> z = {x_bar[0] - x_k.m_x[0], x_bar[1] - x_k.m_x[1]};
 
     // w_ptr = W_2 function
     double W_value = W(z, h_g, w_ptr);
+    // cout << "z: " << z[0] << "," << z[1] << endl;
     // cout << "w_val: " << W_value << endl;
     // Multiply G_i by W_value and incrememnt G_k matrix by G_i
     Point point_accessor(i_pos[0], i_pos[1]);
@@ -202,5 +207,6 @@ array<array<double, DIM>, DIM> interpolate_array(const BoxData<double> G_i[DIM][
     }
   }
 
+// cout << endl;
   return G_k;
 }

@@ -36,33 +36,33 @@
 * DAMAGE.
 *
 *****************************************************************************/
- 
- 
+
+
 /* ************************************************************************* //
 //                             visit_writer.c                                //
 // ************************************************************************* */
- 
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
- 
+
 #include <Proto_VisitWriter.H>
- 
- 
+
+
 /*
  * Globals.
  */
 
 // Removing these as part of VisitWriter update -cgebhart 6-18-2018
- 
+
 //inline FILE *fp = NULL;
 //#pragma omp threadprivate(fp)
 
 //inline int useBinary = 0;
 //inline int numInColumn = 0;
- 
- 
+
+
 /* ****************************************************************************
  *  Function: end_line
  *
@@ -73,10 +73,10 @@
  *
  *  Programmer: Hank Childs
  *  Creation:   September 3, 2004
- *  Update By:  Chris L. Gebhart - June 18, 2018   
+ *  Update By:  Chris L. Gebhart - June 18, 2018
  *
  * ************************************************************************* */
- 
+
 inline void end_line(FILE* fp, int& numInColumn)
 {
     if (!VISIT_USE_BINARY)
@@ -86,8 +86,8 @@ inline void end_line(FILE* fp, int& numInColumn)
         numInColumn = 0;
     }
 }
- 
- 
+
+
 /* ****************************************************************************
  *  Function: open_file
  *
@@ -97,7 +97,7 @@ inline void end_line(FILE* fp, int& numInColumn)
  *
  *  Programmer: Hank Childs
  *  Creation:   September 3, 2004
- *  Update By:  Chris L. Gebhart - June 18, 2018   
+ *  Update By:  Chris L. Gebhart - June 18, 2018
  *
  * ************************************************************************* */
 
@@ -119,7 +119,7 @@ FILE* vtk_open_file(const char* filename)
     {
         sprintf(full_filename, "%s.vtk", filename);
     }
- 
+
     FILE* f = fopen(full_filename, "w+");
 
     if (f == NULL)
@@ -129,8 +129,8 @@ FILE* vtk_open_file(const char* filename)
     }
     return f;
 }
- 
- 
+
+
 /* ****************************************************************************
  *  Function: close_file
  *
@@ -142,7 +142,7 @@ FILE* vtk_open_file(const char* filename)
  *
  * ************************************************************************* */
 void vtk_close_file(FILE* file, int& numInColumn)
-{ 
+{
   //fp=file;
   end_line(file, numInColumn);
   fclose(file);
@@ -155,7 +155,7 @@ void close_file(void)
     fp = NULL;
 }
 */
- 
+
 /* ****************************************************************************
  *  Function: force_big_endian
  *
@@ -170,7 +170,7 @@ void close_file(void)
  *  Creation:   September 3, 2004
  *
  * ************************************************************************* */
- 
+
 inline void force_big_endian(unsigned char *bytes)
 {
     static int doneTest = 0;
@@ -183,7 +183,7 @@ inline void force_big_endian(unsigned char *bytes)
             shouldSwap = 1;
         doneTest = 1;
     }
- 
+
     if (shouldSwap & VISIT_USE_BINARY)
     {
         unsigned char tmp = bytes[0];
@@ -200,8 +200,8 @@ inline void force_big_endian(unsigned char *bytes)
         bytes[4] = tmp;
     }
 }
- 
- 
+
+
 /* ****************************************************************************
  *  Function: write_string
  *
@@ -212,13 +212,13 @@ inline void force_big_endian(unsigned char *bytes)
  *  Creation:   September 3, 2004
  *
  * ************************************************************************* */
- 
+
 inline void write_string(const char *str, FILE* fp)
 {
     fprintf(fp, "%s",str);
 }
- 
- 
+
+
 /* ****************************************************************************
  *  Function: new_section
  *
@@ -230,15 +230,15 @@ inline void write_string(const char *str, FILE* fp)
  *  Creation:   September 3, 2004
  *
  * ************************************************************************* */
- 
+
 inline void new_section(FILE* fp, int& numInColumn)
 {
     if (numInColumn != 0)
         end_line(fp,numInColumn);
     numInColumn = 0;
 }
- 
- 
+
+
 /* ****************************************************************************
  *  Function: write_int
  *
@@ -250,7 +250,7 @@ inline void new_section(FILE* fp, int& numInColumn)
  *  Creation:   September 3, 2004
  *
  * ************************************************************************* */
- 
+
 inline void write_int( int val, FILE* fp, int& numInColumn)
 {
     if (VISIT_USE_BINARY)
@@ -271,8 +271,8 @@ inline void write_int( int val, FILE* fp, int& numInColumn)
         }
     }
 }
- 
- 
+
+
 /* ****************************************************************************
  *  Function: write_double
  *
@@ -289,7 +289,7 @@ inline void write_int( int val, FILE* fp, int& numInColumn)
  *    Make precision changes suggested by Jeff McAninch
  *
  * ************************************************************************* */
- 
+
 inline void write_double(double val, FILE* fp, int& numInColumn)
 {
     if (VISIT_USE_BINARY)
@@ -308,8 +308,8 @@ inline void write_double(double val, FILE* fp, int& numInColumn)
         }
     }
 }
- 
- 
+
+
 /* ****************************************************************************
  *  Function: write_header
  *
@@ -321,7 +321,7 @@ inline void write_double(double val, FILE* fp, int& numInColumn)
  *  Creation:   September 3, 2004
  *
  * ************************************************************************* */
- 
+
 inline void write_header(FILE* fp)
 {
     fprintf(fp, "# vtk DataFile Version 2.0\n");
@@ -331,8 +331,8 @@ inline void write_header(FILE* fp)
     else
         fprintf(fp, "ASCII\n");
 }
- 
- 
+
+
 /* ****************************************************************************
  *  Function: write_variables
  *
@@ -352,7 +352,7 @@ inline void write_header(FILE* fp)
  *  Creation:   September 3, 2004
  *
  * ************************************************************************* */
- 
+
 inline void write_variables(int nvars, int *vardim, int *centering,
                      const char * const * varname, double **vars,
                      int npts, int ncells, FILE* fp, int& numInColumn)
@@ -361,11 +361,11 @@ inline void write_variables(int nvars, int *vardim, int *centering,
     int i, j, first_scalar, first_vector;
     int num_scalars, num_vectors;
 //    int num_field = 0;
- 
+
     new_section(fp,numInColumn);
     sprintf(str, "CELL_DATA %d\n", ncells);
     write_string(str,fp);
- 
+
     first_scalar = 0;
     first_vector = 0;
     num_scalars = 0;
@@ -380,7 +380,7 @@ inline void write_variables(int nvars, int *vardim, int *centering,
         {
             int num_to_write = 0;
             int should_write = 0;
- 
+
             if (vardim[i] == 1)
             {
                 if (first_scalar == 0)
@@ -412,7 +412,7 @@ inline void write_variables(int nvars, int *vardim, int *centering,
                 printf("Ignoring variable %s.\n", varname[i]);
                 continue;
             }
- 
+
             if (should_write)
             {
                 num_to_write = ncells*vardim[i];
@@ -424,7 +424,7 @@ inline void write_variables(int nvars, int *vardim, int *centering,
             }
         }
     }
- 
+
     first_scalar = 0;
     if (num_scalars > 0)
     {
@@ -449,7 +449,7 @@ inline void write_variables(int nvars, int *vardim, int *centering,
                     }
                 }
             }
- 
+
             if (should_write)
             {
                 int num_to_write = ncells*vardim[i];
@@ -461,7 +461,7 @@ inline void write_variables(int nvars, int *vardim, int *centering,
             }
         }
     }
- 
+
     first_vector = 0;
     if (num_vectors > 0)
     {
@@ -473,7 +473,7 @@ inline void write_variables(int nvars, int *vardim, int *centering,
             if (centering[i] == 0)
             {
 //                int num_to_write = 0;
- 
+
                 if (vardim[i] == 3)
                 {
                     if (first_vector == 0)
@@ -488,7 +488,7 @@ inline void write_variables(int nvars, int *vardim, int *centering,
                     }
                 }
             }
- 
+
             if (should_write)
             {
                 int num_to_write = ncells*vardim[i];
@@ -500,11 +500,11 @@ inline void write_variables(int nvars, int *vardim, int *centering,
             }
         }
     }
- 
+
     new_section(fp,numInColumn);
     sprintf(str, "POINT_DATA %d\n", npts);
     write_string(str,fp);
- 
+
     first_scalar = 0;
     first_vector = 0;
     num_scalars = 0;
@@ -519,7 +519,7 @@ inline void write_variables(int nvars, int *vardim, int *centering,
         {
             int num_to_write = 0;
             int should_write = 0;
- 
+
             if (vardim[i] == 1)
             {
                 if (first_scalar == 0)
@@ -551,7 +551,7 @@ inline void write_variables(int nvars, int *vardim, int *centering,
                 printf("Ignoring variable %s.\n", varname[i]);
                 continue;
             }
- 
+
             if (should_write)
             {
                 num_to_write = npts*vardim[i];
@@ -563,7 +563,7 @@ inline void write_variables(int nvars, int *vardim, int *centering,
             }
         }
     }
- 
+
     first_scalar = 0;
     if (num_scalars > 0)
     {
@@ -588,7 +588,7 @@ inline void write_variables(int nvars, int *vardim, int *centering,
                     }
                 }
             }
- 
+
             if (should_write)
             {
                 int num_to_write = npts*vardim[i];
@@ -600,7 +600,7 @@ inline void write_variables(int nvars, int *vardim, int *centering,
             }
         }
     }
- 
+
     first_vector = 0;
     if (num_vectors > 0)
     {
@@ -612,7 +612,7 @@ inline void write_variables(int nvars, int *vardim, int *centering,
             if (centering[i] != 0)
             {
 //                int num_to_write = 0;
- 
+
                 if (vardim[i] == 3)
                 {
                     if (first_vector == 0)
@@ -627,7 +627,7 @@ inline void write_variables(int nvars, int *vardim, int *centering,
                     }
                 }
             }
- 
+
             if (should_write)
             {
                 int num_to_write = npts*vardim[i];
@@ -640,8 +640,8 @@ inline void write_variables(int nvars, int *vardim, int *centering,
         }
     }
 }
- 
- 
+
+
 /* ****************************************************************************
 //  Function: write_point_mesh
 //
@@ -668,7 +668,7 @@ inline void write_variables(int nvars, int *vardim, int *centering,
 //
 // ***************************************************************************/
 
-/* 
+/*
 void write_point_mesh(const char *filename, int npts, double *pts,
                       int nvars, int *vardim, const char * const *varnames,
                       double **vars)
@@ -686,13 +686,13 @@ inline void write_point_mesh(const char* filename, int npts, double *pts,
 {
     FILE* fp = vtk_open_file(filename);
     int numInColumn = 0;
-     
+
     int   i;
     char  str[128];
     int  *centering = NULL;
- 
+
     write_header(fp);
- 
+
     write_string("DATASET UNSTRUCTURED_GRID\n",fp);
     sprintf(str, "POINTS %d double\n", npts);
     write_string(str,fp);
@@ -700,7 +700,7 @@ inline void write_point_mesh(const char* filename, int npts, double *pts,
     {
         write_double(pts[i],fp,numInColumn);
     }
- 
+
     new_section(fp,numInColumn);
     sprintf(str, "CELLS %d %d\n", npts, 2*npts);
     write_string(str,fp);
@@ -710,7 +710,7 @@ inline void write_point_mesh(const char* filename, int npts, double *pts,
         write_int(i,fp,numInColumn);
         end_line(fp,numInColumn);
     }
- 
+
     new_section(fp,numInColumn);
     sprintf(str, "CELL_TYPES %d\n", npts);
     write_string(str,fp);
@@ -719,17 +719,17 @@ inline void write_point_mesh(const char* filename, int npts, double *pts,
         write_int(VISIT_VERTEX,fp,numInColumn);
         end_line(fp,numInColumn);
     }
- 
+
     centering = (int *) malloc(nvars*sizeof(int));
     for (i = 0 ; i < nvars ; i++)
         centering[i] = 1;
     write_variables(nvars, vardim, centering, varnames, vars, npts, npts, fp, numInColumn);
     free(centering);
- 
+
     vtk_close_file(fp,numInColumn);
 }
 #endif
- 
+
 /* ****************************************************************************
  *  Function: num_points_for_cell
  *
@@ -740,7 +740,7 @@ inline void write_point_mesh(const char* filename, int npts, double *pts,
  *  Creation:   September 3, 2004
  *
  * ************************************************************************* */
- 
+
 inline int num_points_for_cell(int celltype)
 {
     int npts = 0;
@@ -773,8 +773,8 @@ inline int num_points_for_cell(int celltype)
     }
     return npts;
 }
- 
- 
+
+
 /* ****************************************************************************
 //  Function: write_unstructured_mesh
 //
@@ -808,7 +808,7 @@ inline int num_points_for_cell(int celltype)
 //  Creation:   September 2, 2004
 //
 // ***************************************************************************/
- 
+
 void write_unstructured_mesh(const char *filename, int npts,
                              double *pts, int ncells, int *celltypes, int *conn,
                              int nvars, int *vardim, int *centering,
@@ -816,14 +816,14 @@ void write_unstructured_mesh(const char *filename, int npts,
 {
     FILE* fp = vtk_open_file(filename);
     int numInColumn = 0;
-    
+
     int   i, j;
     char  str[128];
     int   conn_size = 0;
     int  *curr_conn = conn;
- 
+
     write_header(fp);
- 
+
     write_string("DATASET UNSTRUCTURED_GRID\n",fp);
     sprintf(str, "POINTS %d double\n", npts);
     write_string(str,fp);
@@ -831,12 +831,12 @@ void write_unstructured_mesh(const char *filename, int npts,
     {
         write_double(pts[i],fp,numInColumn);
     }
- 
+
     new_section(fp,numInColumn);
     for (i = 0 ; i < ncells ; i++)
     {
         int npts = num_points_for_cell(celltypes[i]);
- 
+
         conn_size += npts+1;
     }
     sprintf(str, "CELLS %d %d\n", ncells, conn_size);
@@ -849,7 +849,7 @@ void write_unstructured_mesh(const char *filename, int npts,
             write_int(*curr_conn++,fp,numInColumn);
         end_line(fp,numInColumn);
     }
- 
+
     new_section(fp,numInColumn);
     sprintf(str, "CELL_TYPES %d\n", ncells);
     write_string(str,fp);
@@ -858,13 +858,13 @@ void write_unstructured_mesh(const char *filename, int npts,
         write_int(celltypes[i],fp,numInColumn);
         end_line(fp,numInColumn);
     }
- 
+
     write_variables(nvars, vardim, centering, varnames, vars, npts, ncells, fp, numInColumn);
- 
+
     vtk_close_file(fp,numInColumn);
 }
- 
- 
+
+
 /* ****************************************************************************
 //  Function: write_rectilinear_mesh
 //
@@ -918,10 +918,10 @@ void write_rectilinear_mesh(const char* filename, int *dims,
                             int nvars, int *vardim, int *centering,
                             const char * const *varnames, double **vars)
 {
-  
+
     FILE* fp = vtk_open_file(filename);
     int numInColumn = 0;
-    
+
     int   i;
     char  str[128];
     int npts = dims[0]*dims[1]*dims[2];
@@ -929,9 +929,9 @@ void write_rectilinear_mesh(const char* filename, int *dims,
     int ncY = (dims[1] - 1 < 1 ? 1 : dims[1] - 1);
     int ncZ = (dims[2] - 1 < 1 ? 1 : dims[2] - 1);
     int ncells = ncX*ncY*ncZ;
- 
+
     write_header(fp);
- 
+
     write_string("DATASET RECTILINEAR_GRID\n",fp);
     sprintf(str, "DIMENSIONS %d %d %d\n", dims[0], dims[1], dims[2]);
     write_string(str,fp);
@@ -949,13 +949,13 @@ void write_rectilinear_mesh(const char* filename, int *dims,
     write_string(str,fp);
     for (i = 0 ; i < dims[2] ; i++)
         write_double(z[i],fp,numInColumn);
- 
+
     write_variables(nvars, vardim, centering, varnames, vars, npts, ncells, fp, numInColumn);
- 
+
     vtk_close_file(fp, numInColumn);
 }
- 
- 
+
+
 /* ****************************************************************************
 //  Function: write_regular_mesh
 //
@@ -988,33 +988,33 @@ void write_rectilinear_mesh(const char* filename, int *dims,
 //  Creation:   September 2, 2004
 //
 // ***************************************************************************/
- 
+
 void write_regular_mesh(const char *filename, int *dims,
                         int nvars, int *vardim, int *centering,
                         const char * const *varnames, double **vars)
 {
     int  i;
- 
+
     double *x = (double *) malloc(sizeof(double)*dims[0]);
     double *y = (double *) malloc(sizeof(double)*dims[1]);
     double *z = (double *) malloc(sizeof(double)*dims[2]);
- 
+
     for (i = 0 ; i < dims[0] ; i++)
         x[i] = (double) i;
     for (i = 0 ; i < dims[1] ; i++)
         y[i] = (double) i;
     for (i = 0 ; i < dims[2] ; i++)
         z[i] = (double) i;
- 
+
     write_rectilinear_mesh(filename, dims, x, y, z, nvars, vardim,
                            centering, varnames, vars);
- 
+
     free(x);
     free(y);
     free(z);
 }
- 
- 
+
+
 /* ****************************************************************************
 //  Function: write_curvilinear_mesh
 //
@@ -1052,7 +1052,7 @@ void write_regular_mesh(const char *filename, int *dims,
 //    Fix problem with 2D structured meshes and assessing cell count.
 //
 // ***************************************************************************/
- 
+
 inline void write_curvilinear_mesh(const char *filename, int ub, int *dims,double *pts,
                             int nvars, int *vardim, int *centering,
                             const char * const *varnames, double **vars)
@@ -1064,11 +1064,11 @@ inline void write_curvilinear_mesh(const char *filename, int ub, int *dims,doubl
     int ncY = (dims[1] - 1 < 1 ? 1 : dims[1] - 1);
     int ncZ = (dims[2] - 1 < 1 ? 1 : dims[2] - 1);
     int ncells = ncX*ncY*ncZ;
- 
+
     FILE* fp = vtk_open_file(filename);
     int numInColumn = 0;
     write_header(fp);
- 
+
     write_string("DATASET STRUCTURED_GRID\n",fp);
     sprintf(str, "DIMENSIONS %d %d %d\n", dims[0], dims[1], dims[2]);
     write_string(str,fp);
@@ -1078,8 +1078,8 @@ inline void write_curvilinear_mesh(const char *filename, int ub, int *dims,doubl
     {
         write_double(pts[i],fp,numInColumn);
     }
- 
+
     write_variables(nvars, vardim, centering, varnames, vars, npts, ncells,fp,numInColumn);
- 
+
     vtk_close_file(fp,numInColumn);
 }

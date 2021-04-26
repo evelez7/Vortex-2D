@@ -7,7 +7,7 @@
 #include <cstring>
 #include <cstdio>
 
-namespace Proto 
+namespace Proto
 {
 
 /** @defgroup boxdata_writer BoxData Writer */
@@ -77,7 +77,7 @@ using std::string;
 //convenience function, turn off iter in filename by setting a_iter < 0
 template <unsigned int n>
 inline void WriteData(BoxData<double,n> &    a_state,
-               const   int       &    a_iter, 
+               const   int       &    a_iter,
                const   double    &    a_dx,
                const   string    &    a_varnamebase,
                const   string    &    a_filenamebase)
@@ -89,7 +89,7 @@ inline void WriteData(BoxData<double,n> &    a_state,
   }
 
   char basename[1024];
-  if(a_iter >= 0) 
+  if(a_iter >= 0)
   {
     sprintf(basename,"%s.%06d",a_filenamebase.c_str(),a_iter);
   }
@@ -97,7 +97,7 @@ inline void WriteData(BoxData<double,n> &    a_state,
   {
     sprintf(basename,"%s",a_filenamebase.c_str());
   }
-    
+
   char* velnames[n];
   for(int idir = 0; idir < n; idir++)
   {
@@ -112,7 +112,7 @@ inline void WriteData(BoxData<double,n> &    a_state,
     delete[] velnames[idir];
   }
 
-}  
+}
 
 template <int n> inline void viewData(BoxData<double, n>* a_statePtr)
 {
@@ -123,4 +123,4 @@ template <int n> inline void viewData(BoxData<double, n>* a_statePtr)
 #include "implem/Proto_WriteBoxDataImplem.H"
 
 } // end Proto namespace
-#endif 
+#endif
